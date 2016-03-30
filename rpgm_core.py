@@ -1,6 +1,6 @@
 __author__ = "Paul Schultz"
-__date__ = "Jul 11, 2015"
-__version__ = "v2.1"
+__date__ = "Mar 30, 2016"
+__version__ = "v3.0"
 
 # This file is based on the network creation algorithm published in:
 #
@@ -445,7 +445,7 @@ class RPG(RpgAlgorithm):
         # where am I?
         self.basepath = os.getcwd()
         self.figdir = os.path.join(self.basepath, "figures/")
-        self.netdir = os.path.join(self.basepath, "simulations/networks/")
+        self.netdir = os.path.join(self.basepath, "networks/")
         if not os.path.exists(self.figdir):
             os.makedirs(self.figdir)
         if not os.path.exists(self.netdir):
@@ -463,33 +463,26 @@ class RPG(RpgAlgorithm):
     # ##                       PUBLIC FUNCTIONS                                ## #
     ###############################################################################
 
-    def save_graph(self):
+    def save_graph(self, info_file=True):
         elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
-
-        # from graph_tool.all import Graph
-        # graph = Graph(directed=False)
-        # graph.add_edge_list(elist)
-        # # make property maps internal
-        # lat = graph.new_vertex_property("double")
-        # lon = graph.new_vertex_property("double")
-        # lat.a = self.lat
-        # lon.a = self.lon
-        # graph.vertex_properties["lat"] = lat
-        # graph.vertex_properties["lon"] = lon
-        # graph.save(self.figdir + name + "_" + self.identifier + ".graphml", fmt="graphml")
-        # graph.save(self.figdir + name + "_" + self.identifier + ".gml", fmt="gml")
 
         G = Graph(self.added_nodes)
         G.add_edges(elist)
         G.vs['lat'] = self.lat
         G.vs['lon'] = self.lon
 
-
         G.write_graphml(self.netdir + self.identifier + ".gml")
+
+        if info_file:
+            if not hasattr(self, "_stat"):
+                self._stat = self.stats
+            with open(self.netdir + self.identifier + ".gml.info", "w") as f:
+                f.write(self._stat + "\n")
 
         return self.netdir + self.identifier + ".gml"
 
 
+    @property
     def stats(self):
         from scipy.linalg import eigvals
 
@@ -498,55 +491,41 @@ class RPG(RpgAlgorithm):
         G = Graph(self.added_nodes)
         G.add_edges(elist)
 
-        with open(self.netdir + self.identifier + ".gml.info", "w") as f:
+        STR = str()
+        STR += "connected:" + str(G.is_connected()) + "\n"
+        STR += "undirected:" + str(not G.is_directed()) + "\n"
+        STR += "\n"
+        STR += "mean degree kbar:" + str(np.mean(G.degree())) + "\n"
+        STR += "ratio r{k>kbar}:" + str(sum(G.degree() > np.mean(G.degree())) * 1. / self.added_nodes) + "\n"
+        STR += "avg. neighbour's degree distribution:" + str(np.min(G.knn()[0])) + \
+            "..." + "<k>=" + str(np.mean(G.knn()[0])) + \
+            "..." + str(np.max(G.knn()[0])) + "\n"
+        STR += "degree - degree frequency - avg. neighbour's degree:"
+        fd, _ = np.histogram(G.degree(), bins=np.max(G.degree()))
+        for i, val in enumerate(G.knn()[1]):
+            STR += "    " + str(i + 1) + "-" + str(fd[i]) + "-" + str(val) + "\n"
+        STR += "s.p. betweenness distribution:" + str(np.min(G.betweenness())) + \
+            "..." + "<b>=" + str(np.mean(G.betweenness())) + \
+            "..." + str(np.max(G.betweenness())) + "\n"
+        STR += "\n"
+        STR += "average shortest path length:" + str(G.average_path_length()) + "\n"
+        STR += "network transistivity:" + str(G.transitivity_undirected()) + "\n"
+        STR += "degree assortativity:" + str(G.assortativity_degree()) + "\n"
+        STR += "Fiedler eigenvalue lambda2:" + str(sorted(eigvals(G.laplacian()))[1]) + "\n"
+        STR += "\n"
+        STR += "number of dead ends:" + str(G.degree().count(1)) + "\n"
+        n_a_dt = G.betweenness().count(self.added_nodes - 2) + \
+            G.betweenness().count(2 * self.added_nodes - 5) + \
+            G.betweenness().count(2 * self.added_nodes - 6) + \
+            G.betweenness().count(3 * self.added_nodes - 10) + \
+            G.betweenness().count(4 * self.added_nodes - 17) + \
+            G.betweenness().count(5 * self.added_nodes - 26)
+        STR += "number of nodes adjacent to dead trees (approx.):" + str(n_a_dt) + "\n"
+        STR += "number of detour nodes:" + str(G.betweenness().count(0) - G.degree().count(1)) + "\n"
+        self._stat = STR
 
-            print "connected:", G.is_connected()
-            f.write("connected: " + str(G.is_connected()) + "\n")
-            print "undirected:", not G.is_directed()
-            f.write("undirected: " + str(G.is_directed()) + "\n")
-            print
-            print "mean degree kbar:", np.mean(G.degree())
-            f.write("mean degree kbar: " + str(np.mean(G.degree())) + "\n")
-            print "ratio r{k>kbar}:",sum(G.degree() > np.mean(G.degree())) * 1. / self.added_nodes
-            f.write("ratio r{k>kbar}: " + str(sum(G.degree() > np.mean(G.degree())) * 1. / self.added_nodes) + "\n")
-            print "avg. neighbour's degree distribution:", np.min(G.knn()[0]), \
-                "...", "<k>=", np.mean(G.knn()[0]), \
-                "...", np.max(G.knn()[0])
-            f.write("avg. neighbour's degree distribution: " + str(np.min(G.knn()[0])) +
-                "... <k>=" + str(np.mean(G.knn()[0])) +
-                "..." + str( np.max(G.knn()[0])) + "\n")
-            print "degree - degree frequency - avg. neighbour's degree:"
-            fd, _ = np.histogram(G.degree(), bins=np.max(G.degree()))
-            for i, val in enumerate(G.knn()[1]):
-                print "    ", i + 1, "-", fd[i], "-", val
-            print "s.p. betweenness distribution:", np.min(G.betweenness()), \
-                "...", "<b>=", np.mean(G.betweenness()), \
-                "...", np.max(G.betweenness())
-            f.write("s.p. betweenness distribution: " + str(np.min(G.betweenness())) +
-                "... <k>=" + str(np.mean(G.betweenness())) +
-                "..." + str( np.max(G.betweenness())) + "\n")
-            print
-            print "average shortest path length:", G.average_path_length()
-            f.write("average shortest path length: " + str(G.average_path_length()) + "\n")
-            print "network transistivity:", G.transitivity_undirected()
-            f.write("network transistivity: " + str( G.transitivity_undirected()) + "\n")
-            print "degree assortativity:", G.assortativity_degree()
-            f.write("degree assortativity: " + str(G.assortativity_degree()) + "\n")
-            print "Fiedler eigenvalue lambda2:", sorted(eigvals(G.laplacian()))[1]
-            f.write("Fiedler eigenvalue lambda2: " + str(sorted(eigvals(G.laplacian()))[1]) + "\n")
-            print
-            print "number of dead ends:", G.degree().count(1)
-            f.write("number of dead ends: " + str(G.degree().count(1)) + "\n")
-            n_a_dt = G.betweenness().count(self.added_nodes - 2) + \
-                G.betweenness().count(2 * self.added_nodes - 5) + \
-                G.betweenness().count(2 * self.added_nodes - 6) + \
-                G.betweenness().count(3 * self.added_nodes - 10) + \
-                G.betweenness().count(4 * self.added_nodes - 17) + \
-                G.betweenness().count(5 * self.added_nodes - 26)
-            print "number of nodes adjacent to dead trees (approx.):", n_a_dt
-            f.write("number of nodes adjacent to dead trees (approx.): " + str(n_a_dt) + "\n")
-            print "number of detour nodes:", G.betweenness().count(0) - G.degree().count(1)
-            f.write("number of detour nodes: " + str(G.betweenness().count(0) - G.degree().count(1)) + "\n")
+        return STR
+
 
     def plot_net(self, name="random_network", labels=False, crop=False):
 
@@ -682,8 +661,7 @@ def main():
 
     print g
 
-    g.stats()
-    return g.save_graph()
+    print g.stats
 
 
 if __name__ == "__main__":
