@@ -22,9 +22,34 @@ from scipy.sparse import dok_matrix
 from igraph import Graph, plot, palettes, rescale
 import os
 
-from rpgm_core import RPG
+from rpgm_algo import RpgAlgorithm
 
+class NeoNet(RpgAlgorithm):
+    def __init__(self):
+        super(NeoNet, self).__init__()
 
+    ###############################################################################
+    # ##                       PRIVATE FUNCTIONS                               ## #
+    ###############################################################################
+
+    def _get_coords(self):
+        if self.sampling == "uniform":
+            return self._uniformunitsquare()
+        else:
+            print "ERROR: Not implemented yet."
+            exit(1)
+
+    def _uniformsquare(self, epsilon, point=None):
+        """
+        return point drawn uniformly at random
+        from unit square of width epsilon
+        centered around a given point
+        -> 2D coordinates
+        """
+        if point is None:
+            return np.random.uniform(size=2) * epsilon
+        else:
+            return np.random.uniform(size=2) * epsilon - epsilon * np.ones(2) / 2. + np.array(point)
 
 
 #######################################################################################################################
@@ -33,18 +58,35 @@ from rpgm_core import RPG
 
 
 def main():
+    g = NeoNet()
 
-    g = RPG()
-    assert(isinstance(g, RPG))
+    m = np.array([2, 4, 8, 16, 32, 64])
+    epsilon = np.array([1., 1. / 3., 1. / 9., 1. / 27., 1. / 81., 1. / 243.])
+    points = []
+    for layer in xrange(len(m)):
+        points.append(np.empty([m[layer], 2]))
 
-    #g.debug = True
-    g.set_params(n=100, n0=1, r=1./3.)
-    g.initialise()
-    g.grow()
+    for j in xrange(m[0]):
+        points[0][j, :] = g._uniformsquare(epsilon[0])
 
-    print g
+    for layer in xrange(1, len(m)):
+        for node in xrange(m[layer]):
+            points[layer][node, :] = g._uniformsquare(epsilon[layer], points[layer - 1][node % m[layer - 1], :])
 
-    g.stats
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    currentAxis = fig.add_subplot(111,aspect='equal')
+    size = np.array([60, 50, 40, 30, 20, 10])
+    col = np.array(["b", "r", "k", "g", "y", "gray"])
+    for layer in xrange(len(m)):
+        plt.scatter(points[layer][:, 0], points[layer][:, 1], s=size[layer], c=col[layer])
+    for layer in xrange(len(m) - 1):
+        for j in xrange(m[layer]):
+            currentAxis.add_patch(plt.Rectangle(points[layer][j, :] - epsilon[layer + 1] * np.ones(2) / 2.,
+                                                epsilon[layer + 1], epsilon[layer + 1], alpha=1, facecolor='none'))
+
+    plt.show()
+
 
 
 if __name__ == "__main__":
