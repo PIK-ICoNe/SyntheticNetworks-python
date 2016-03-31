@@ -1,2 +1,4 @@
 .idea/*
 *.pyc
+rpgm_algo.*
+rpgm_core.*
