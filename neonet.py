@@ -39,7 +39,8 @@ class NeoNet(RpgAlgorithm):
             print "ERROR: Not implemented yet."
             exit(1)
 
-    def _uniformsquare(self, epsilon, point=None):
+    @staticmethod
+    def _uniformsquare(epsilon, point=None):
         """
         return point drawn uniformly at random
         from unit square of width epsilon
@@ -50,6 +51,7 @@ class NeoNet(RpgAlgorithm):
             return np.random.uniform(size=2) * epsilon
         else:
             return np.random.uniform(size=2) * epsilon - epsilon * np.ones(2) / 2. + np.array(point)
+
 
 
 #######################################################################################################################
