@@ -28,6 +28,14 @@ class NeoNet(RpgAlgorithm):
     def __init__(self):
         super(NeoNet, self).__init__()
 
+    def place_toplayer(self):
+        # TODO generate transmission grid
+        raise NotImplementedError()
+
+    def place_sublayer(self):
+        # TODO: use this to place a network instance for each root node
+        raise NotImplementedError()
+
     ###############################################################################
     # ##                       PRIVATE FUNCTIONS                               ## #
     ###############################################################################
@@ -69,11 +77,11 @@ def main():
         points.append(np.empty([m[layer], 2]))
 
     for j in xrange(m[0]):
-        points[0][j, :] = g._uniformsquare(epsilon[0])
+        points[0][j, :] = NeoNet._uniformsquare(epsilon[0])
 
     for layer in xrange(1, len(m)):
         for node in xrange(m[layer]):
-            points[layer][node, :] = g._uniformsquare(epsilon[layer], points[layer - 1][node % m[layer - 1], :])
+            points[layer][node, :] = NeoNet._uniformsquare(epsilon[layer], points[layer - 1][node % m[layer - 1], :])
 
     import matplotlib.pyplot as plt
     fig = plt.figure()
