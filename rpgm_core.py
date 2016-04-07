@@ -146,16 +146,13 @@ class RPG(RpgAlgorithm):
         visual_style["layout"] = zip(self.lat, self.lon)
         visual_style["bbox"] = (x / y * 1024, 1024)
         visual_style["margin"] = 10 * scale
-        visual_style["palette"] = palettes["heat"]
-
-
+        #visual_style["palette"] = palettes["heat"]
 
         visual_style["edge_color"] = [edgecolor(edge.source,edge.target) for edge in G.es]
         visual_style["edge_width"] = [2 * scale for edge in G.es]
 
         visual_style["vertex_size"] = [10 * scale for i in range(G.vcount())]
-        visual_style["vertex_color"] = [int(x) for x in rescale(1. - self.bs_predictor(),
-                                                                out_range=(0, len(visual_style["palette"]) - 1))]
+        visual_style["vertex_color"] = "black"
         if labels:
             visual_style["vertex_label"] = [str(i) for i in range(G.vcount())]
 

@@ -1,6 +1,6 @@
 __author__ = "Paul Schultz"
 __date__ = "Mar 30, 2016"
-__version__ = "v3.0"
+__version__ = "v3.1"
 
 # This file is based on the network creation algorithm published in:
 #
@@ -17,14 +17,24 @@ __version__ = "v3.0"
 # DOI: 10.1088/1367-2630/16/12/125001
 
 
+"""
+layer parameters:
+    - N^{i,k} final number of nodes in connected component k belonging to layer i
+    - N_0^{i,k} number of seed nodes in connected component k belonging to layer i
+    - p^i, q^i, s^i and r^i model parameters adapted to each layer i
+    - \sigma^i fraction of connector nodes to other layers (node type allocation)
+    - \epsilon^i link length scale, sublayer i grows in boxes around connectors of width \epsilon^i
+"""
+
+
 import numpy as np
 from scipy.sparse import dok_matrix
 from igraph import Graph, plot, palettes, rescale
 import os
 
-from rpgm_algo import RpgAlgorithm
+from rpgm_core import RPG
 
-class NeoNet(RpgAlgorithm):
+class NeoNet(RPG):
     def __init__(self):
         super(NeoNet, self).__init__()
 
@@ -33,7 +43,7 @@ class NeoNet(RpgAlgorithm):
         raise NotImplementedError()
 
     def place_sublayer(self):
-        # TODO: use this to place a network instance for each root node
+        # TODO: use this to place a network instance for each root node of a distribution grid
         raise NotImplementedError()
 
     ###############################################################################
@@ -48,7 +58,7 @@ class NeoNet(RpgAlgorithm):
             exit(1)
 
     @staticmethod
-    def _uniformsquare(epsilon, point=None):
+    def _uniformsquare(epsilon=1., point=None):
         """
         return point drawn uniformly at random
         from unit square of width epsilon
@@ -70,33 +80,13 @@ class NeoNet(RpgAlgorithm):
 def main():
     g = NeoNet()
 
-    m = np.array([2, 4, 8, 16, 32, 64])
-    epsilon = np.array([1., 1. / 3., 1. / 9., 1. / 27., 1. / 81., 1. / 243.])
-    points = []
-    for layer in xrange(len(m)):
-        points.append(np.empty([m[layer], 2]))
+    g.set_params(n0=10, n=10, p=0.1, q=0.2)
+    g.initialise()
+    g.grow()
 
-    for j in xrange(m[0]):
-        points[0][j, :] = NeoNet._uniformsquare(epsilon[0])
+    g.plot_net()
 
-    for layer in xrange(1, len(m)):
-        for node in xrange(m[layer]):
-            points[layer][node, :] = NeoNet._uniformsquare(epsilon[layer], points[layer - 1][node % m[layer - 1], :])
-
-    import matplotlib.pyplot as plt
-    fig = plt.figure()
-    currentAxis = fig.add_subplot(111,aspect='equal')
-    size = np.array([60, 50, 40, 30, 20, 10])
-    col = np.array(["b", "r", "k", "g", "y", "gray"])
-    for layer in xrange(len(m)):
-        plt.scatter(points[layer][:, 0], points[layer][:, 1], s=size[layer], c=col[layer])
-    for layer in xrange(len(m) - 1):
-        for j in xrange(m[layer]):
-            currentAxis.add_patch(plt.Rectangle(points[layer][j, :] - epsilon[layer + 1] * np.ones(2) / 2.,
-                                                epsilon[layer + 1], epsilon[layer + 1], alpha=1, facecolor='none'))
-
-    plt.show()
-
+    print g
 
 
 if __name__ == "__main__":

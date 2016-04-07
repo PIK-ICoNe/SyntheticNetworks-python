@@ -1,0 +1,35 @@
+# source: http://burnanenergyjournal.com/the-electricity-grid-a-history/
+- In the early days of electricity, energy systems were small and localized -> Pearl Street Station in New York City
+- From the late 1800s onward, a patchwork of AC and DC grids cropped up across the country -> privatization!
+- Today’s electricity grid – actually three separate grids – is extraordinarily complex as a result.
+
+# source: http://www.50hertz.com/de/50Hertz/Historischer-Hintergrund
+
+- Stromversorgung zu Beginn des 20. Jahrhunderts zunächst nur in unmittelbarer Umgebung der Stromerzeugungsstellen möglich
+- überwiegend in Stadtgebieten und Ballungsräumen.
+- 4040 Unternehmen mit einer installierten Leistung von insgesamt 2096 MW, d.h. durchschnittlich 500 kW je Werk
+- Problem: Ausfall eines isolierten Kraftwerks, Schwankende Nachfrage oder extreme Wettersituationen
+ -> Versorgungssicherheit
+
+- Nach und nach wurden einzelne Kraftwerke im Bereich der Niederspannung verbunden, so dass im ländlichen Bereich
+weitläufigere Netzstrukturen entstanden
+- Diese wurden später an die Mittelspannungsebene angeschlossen, um noch größere Entfernungen überbrücken zu können
+- Problem: Zunahme Last+Erzeugung -> hohe Lastflüsse -> höhere Spannungsabene nötig
+
+- Um 1930 entstand die erste Verbundleitung auf Höchstspannungsebene (220 Kilovolt) für den Stromtransport zwischen
+Regionalnetzen.
+-> Reichssammelschiene
+
+- 1951 im Zusammenschluss der Netze von elf Ländern zum europäischen Verbundnetz UCPTE. Derweil begann in Deutschland
+  der Ausbau des 380-Kilovolt-Verbundnetzes.
+
+DDR:
+Zum Ende des Jahres 1975 bestand in der DDR ein Höchstspannungsnetz mit mehr als 7600 km Systemlänge, vorwiegend 220
+kV.  Bis zur politischen Wende im Jahr 1990 wurde das Verbundnetz der DDR auf eine Systemlänge von 4312 km in 380 kV und
+6416 km in 220 kV, ausgebaut. Es bestanden 16 Umspannwerke bzw. Schaltanlagen mit einer Oberspannung von 380 kV und 39
+mit 220 kV Oberspannung.
+
+
+# source: rosas-casals paper
+
+# source: book Electricity distribution network design
