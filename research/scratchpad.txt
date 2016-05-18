@@ -1,0 +1,149 @@
+# source: http://burnanenergyjournal.com/the-electricity-grid-a-history/
+- In the early days of electricity, energy systems were small and localized -> Pearl Street Station in New York City
+- From the late 1800s onward, a patchwork of AC and DC grids cropped up across the country -> privatization!
+- Today’s electricity grid – actually three separate grids – is extraordinarily complex as a result.
+
+# source: http://www.50hertz.com/de/50Hertz/Historischer-Hintergrund
+
+- Stromversorgung zu Beginn des 20. Jahrhunderts zunächst nur in unmittelbarer Umgebung der Stromerzeugungsstellen möglich
+- überwiegend in Stadtgebieten und Ballungsräumen.
+- 4040 Unternehmen mit einer installierten Leistung von insgesamt 2096 MW, d.h. durchschnittlich 500 kW je Werk
+- Problem: Ausfall eines isolierten Kraftwerks, Schwankende Nachfrage oder extreme Wettersituationen
+ -> Versorgungssicherheit
+
+- Nach und nach wurden einzelne Kraftwerke im Bereich der Niederspannung verbunden, so dass im ländlichen Bereich weitläufigere Netzstrukturen entstanden
+- Diese wurden später an die Mittelspannungsebene angeschlossen, um noch größere Entfernungen überbrücken zu können
+- Problem: Zunahme Last+Erzeugung -> hohe Lastflüsse -> höhere Spannungsabene nötig
+
+- Um 1930 entstand die erste Verbundleitung auf Höchstspannungsebene (220 Kilovolt) für den Stromtransport zwischen Regionalnetzen.
+-> Reichssammelschiene
+
+- 1951 im Zusammenschluss der Netze von elf Ländern zum europäischen Verbundnetz UCPTE. Derweil begann in Deutschland
+ der Ausbau des 380-Kilovolt-Verbundnetzes.
+
+DDR:
+Zum Ende des Jahres 1975 bestand in der DDR ein Höchstspannungsnetz mit mehr als 7600 km Systemlänge, vorwiegend 220
+kV.  Bis zur politischen Wende im Jahr 1990 wurde das Verbundnetz der DDR auf eine Systemlänge von 4312 km in 380 kV und
+6416 km in 220 kV, ausgebaut. Es bestanden 16 Umspannwerke bzw. Schaltanlagen mit einer Oberspannung von 380 kV und 39
+mit 220 kV Oberspannung.
+
+
+#source:
+Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control andong Cybernetics, 25(1).Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).
+
+- main assumption is that all demand sites and production sites have fixed locations (extra sites cannot he introduced)
+- when one cable cannot be used, it should still be possible to redirect the flow through the network, such that all demand is met,
+- every site should be connected to at least two other sites
+- the network itself sl;ould be connect:ed, i.e., it should be possible to reach every site from every other site, only using the selected connections.
+
+- combination of capacity constraints and connectivity constraints, and the possibility of using multiple cables
+
+- voltage levels optimised independently -> strong assumption!!
+- no (technical?) requirements for inter-level connections
+- all demand must be met without storage, i.e. locally, line capacities need to match demand/generation capacity
+- smiulated annealing (cross-wirings) + load flow calculations in each step
+
+- given: node location and generation/demand capacities
+- different kinds of cables, power flow capacity, costs are proportional to length!
+
+- almost impossible to tell if a network design that consists of a lot of nodes can be improved
+
+# source:
+Yang, H., & H. Bell, M. G. (1998). Models and algorithms for road network design: a review and some new developments. Transport Reviews, 18(3), 257–278. http://doi.org/10.1080/01441649808717016
+
+- mixed NDP : involving simultaneous choice of link addition and capacity improvement which is considered more sensible for road networks
+- introduce the network reserve capacity concept for a capacity improvement plan, and raise and clarify some interesting issues relating to NDP and Braess's paradoxes
+
+# source:
+Strano, E., Nicosia, V., Latora, V., Porta, S., & Barthélemy, M. (2012). Elementary processes governing the evolution of road networks. Scientific Reports, 2, 1–8. http://doi.org/10.1038/srep00296
+
+- road network evolution typically governed by urbanisation
+- continuous expansion and rein- forcement of pre-existing structures
+- persistent backbone of high-centrality (old) roads
+- two elementary processes: densification and exploration, distinguished by edge-betweenness
+- densification: low impact on centrality, no dead ends
+- exploration: higher impact on centrality, dead ends
+
+- average population per road intersection remains contant over time
+- averange link length decreases over time
+
+- road networks are planar graphs, cell area distribution follows power law
+- homogenisation of cell areas, rectangles become dominant shape
+
+# source:
+Yang, H., & H. Bell, M. G. (1998). Models and algorithms for road network design: a review and some new developments. Transport Reviews, 18(3), 257–278. http://doi.org/10.1080/01441649808717016
+
+- The objective is to make an optimal investment decision in order to minimize the total travel cost in the network, while accounting for the route choice behaviour of network users
+        - travel costs could be equivalent to transport losses, on the one hand we have line losses, on the other hand losses at plants that cannot produce at full capacity
+- economic-based objective function for optimization
+- mixed network design problem involving the simultaneous choice of link addition and capacity improvement
+
+- e.g. 4.2.1. Travel cost minimization with fixed demand
+- objective function contains travel costs along all links and construction costs (alternatively, they can also be subject to an additional budget constraint)
+
+- occurence of Braess' paradox depends on overall demand
+
+# source:
+Liu, R., Hu, W.-P., Wang, H., & Wu, C. (2010). The Road Network Evolution Analysis of Guangzhou-Foshan Metropolitan Area Based on Kernel Density Estimation. Computational and Information Sciences, International Conference on, 0, 316–319. http://doi.org/http://doi.ieeecomputersociety.org/10.1109/ICCIS.2010.83
+
+- kernel density estimate of a network (nodes/links) to estimate a probable spatial density function
+- one parameter, bandwidth of the kernel
+- e.g. polynomial, gaussian, ...
+- threshold to define cores
+
+
+# source: 
+Solé, R. V., Rosas-Casals, M., Corominas-Murtra, B., & Valverde, S. (2008). Robustness of the European power grids under intentional attack. Physical Review E, 77(2), 026102. http://doi.org/10.1103/PhysRevE.77.026102
+
+- data of 33 EU countries 
+- static robustness, i.e. no load flow redistribution considered !!
+
+- Power grids, having less skewed exponential degree distributions and often without small-world topology, parameter gamma \neq mean degree 
+- average nearest neighbor connectivity of a node with the degree k is constant? 
+
+- networks grouped in fragile (gamma > 1.5) and robust against intentional attacks
+- the application of the ?N−X? contingency-based criteria, though originally intended to avoid interruptions in power service, would difficult the islanding of disturbances 
+	-> the more connected an element is, the easier would be for a disturbance to reach
+	-> difficulties encountered in preventing perturbations, blackouts or isolating the different power grid elements
+
+
+#source:
+ROSAS-CASALS, M., VALVERDE, S., & SOLÉ, R. V. (2007). TOPOLOGICAL VULNERABILITY OF THE EUROPEAN POWER GRID UNDER ERRORS AND ATTACKS. International Journal of Bifurcation and Chaos, 17(07), 2465–2475. http://doi.org/10.1142/S0218127407018531
+
+- data of 33 EU countries 
+- static robustness, i.e. no load flow redistribution considered !!
+
+- Though every power grid studied has exponential degree distribution and most of them lack typical small-world topology, they display patterns of reaction to node loss similar to those observed in scale-free networks.
+- logarithmic increase in vulnerability with size of networks
+
+- mean degree on average 2.8, linear relation between links and nodes
+- uncorellated networks, nearest neighbour connectivity is const.
+
+- average clustering does not depend on network size
+- larger power grids have longer path lengths than expected for ER
+- hence no SW property observed
+
+- possible way to prevent propagation of distur- bances is to design the system to allow for inten- tional separation into stable islands or interrupt small amounts of load
+
+- existence of geographical stable island ? i.e. prob. for each node to belong to final component -> Anton's model
+
+# source:
+Casals, M. R. (2009). Topological complexity of the electricity transmission network. Implications in the sustainability paradigm, 134. Retrieved from http://www.tesisenred.net/handle/10803/5824
+
+UCTE data with coordinates:
+http://www.ct.upc.edu/termodinamica/RTEdata
+
+- spatio-temporal evolution of french grid
+
+- All transmission lines are assumed to be bidirectional; hence the resulting graph is undirected.
+- The nodes of the network (i.e., generators, transformers, substations, and so on) are treated as identical, featureless vertices.
+- All transmission lines are assumed to be identical (that is, unweighted, with no attributes associated to edges)
+- Only the transmission network is considered.
+
+- Fractal spatial distribution of nodes: power grid, being equally geographically constrained, does not follow a fractal pattern until distribution and low voltage grids are considered
+- Limited node degree
+- Distance-dependence cost of edges 
+- Trivial clustering-degree correlations
+
+# source: book Electricity distribution network design
+chapter 1
