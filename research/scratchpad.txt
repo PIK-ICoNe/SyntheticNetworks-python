@@ -29,7 +29,7 @@ mit 220 kV Oberspannung.
 
 
 #source:
-Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control andong Cybernetics, 25(1).Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).
+Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).
 
 - main assumption is that all demand sites and production sites have fixed locations (extra sites cannot he introduced)
 - when one cable cannot be used, it should still be possible to redirect the flow through the network, such that all demand is met,
