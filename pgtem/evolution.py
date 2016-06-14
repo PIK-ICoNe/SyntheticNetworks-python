@@ -7,7 +7,7 @@ class PowerGrid(object):
     """
 
     def __init__(self):
-        self.nodes = pd.DataFrame(columns=["BusID", "type", "loc", "time"])
+        self.nodes = pd.DataFrame(columns=["BusID", "type", "lon", "lat", "time"])
         self.edges = pd.DataFrame(columns=["BranchID", "source", "target", "type", "time"])
         self.number_of_nodes = 0
         self.number_of_edges = 0
@@ -17,7 +17,7 @@ class PowerGrid(object):
 
     def add_node(self, type, loc, time):
         new_idx = self.number_of_nodes + 1
-        self.nodes.loc[new_idx] = [int(new_idx), type, loc, time]
+        self.nodes.loc[new_idx] = [int(new_idx), type, loc[0], loc[1], time]
         self.number_of_nodes += 1
         return new_idx
 
@@ -38,6 +38,27 @@ class PowerGrid(object):
 
         for edge in edgelist:
             self.add_edge(edge[0], edge[1], "line", time)
+
+    def save(self, path, raw=False):
+        import igraph as ig
+
+        edgelist = zip(np.array(self.edges.source.values, dtype=np.int),
+                       np.array(self.edges.target.values, dtype=np.int))
+
+        g = ig.Graph()
+        g.__init__(n=self.number_of_nodes, edges=edgelist, directed=False)
+
+        if not raw:
+            g.vs["BusID"] = self.nodes.BusID.values
+            g.vs["time"] = self.nodes.time.values
+            g.vs["type"] = self.nodes.type.values
+            g.vs["lon"] = self.nodes.lon.values
+            g.vs["lat"] = self.nodes.lat.values
+            g.es["time"] = self.edges.time.values
+            g.es["type"] = self.edges.type.values
+            g.es["BranchID"] = self.edges.BranchID.values
+
+        g.write_picklez(path)
 
 def node_proposition(new_loc, coordinator, providers, regulator):
 

@@ -28,8 +28,7 @@ def main():
             net.update(loc, ranking[0], time)
 
 
-    print net.nodes
-    print net.edges
+    net.save("test.network")
 
 
 
