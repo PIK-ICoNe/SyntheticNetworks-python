@@ -160,6 +160,42 @@ class PowerGrid(object):
         self.number_of_edges += 1
         return new_idx
 
+    def import_from_rpg(self, g=None, **kwargs):
+        from rpgm.rpgm_algo import RpgAlgorithm
+
+        if g is None:
+            g = RpgAlgorithm()
+        else:
+            assert isinstance(g, RpgAlgorithm)
+
+        g.set_params(**kwargs)
+        g.initialise()
+
+        # update node data table
+        new_nodes = pd.DataFrame(data={"BusID": range(g.added_nodes),
+                                       "lat": g.lat,
+                                       "lon": g.lon,
+                                       "time": np.repeat(-1, g.added_nodes),
+                                      "type": np.repeat("rpg_node", g.added_nodes)},
+                                 index=range(g.added_nodes))
+        self.nodes = pd.merge(self.nodes, new_nodes, how="outer")
+        # update node counter
+        self.number_of_nodes += g.added_nodes
+
+        for edge, length in g.distance.iteritems():
+            # update edge data table
+            new_edge = pd.DataFrame(data={"BranchID": self.number_of_edges,
+                                          "source": int(edge[0]),
+                                          "target": int(edge[1]),
+                                          "type": "rpg_edge",
+                                          "time": -1},
+                                    index=range(1))
+            self.edges = pd.merge(self.edges, new_edge, how="outer")
+            # add edge to adjacency matrix
+            self.adjacency[edge[0], edge[1]] = self.adjacency[edge[1], edge[0]] = length
+            # update edge counter
+            self.number_of_edges += 1
+
     def convert_to_igraph(self):
         import igraph as ig
         pass

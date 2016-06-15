@@ -9,10 +9,16 @@ def main():
     goHV = Provider.HV()
     regulator = Regulator()
 
-    ## iniit empty power grid
-    net = PowerGrid(10)
+    ## init empty power grid with desired number of nodes
+    net = PowerGrid(100)
 
-    for time in xrange(0, 10, 1):
+    ####### initially, we might again have a MST ###########
+
+    net.import_from_rpg(n=5, n0=5, r=1. / 3.)
+
+    ####### growth mechanism #######
+
+    for time in xrange(0, 20, 1):
 
         # propose new plant
         node = producer.new_node(net.number_of_nodes + 1, time)
