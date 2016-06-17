@@ -14,7 +14,8 @@ def main():
 
     ####### initially, we might again have a MST ###########
 
-    net.import_from_rpg(n=5, n0=5, r=1. / 3.)
+    net.import_from_rpg(n=100, n0=10)
+
 
     ####### growth mechanism #######
 
@@ -36,8 +37,9 @@ def main():
             if allowed:
                 net.update(node, edgelist=ranking[0])
 
-    print net.nodes
     print net.edges
+
+    print net.nodes
 
 
     net.save("test.network")

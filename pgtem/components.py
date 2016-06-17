@@ -149,13 +149,17 @@ class PowerGrid(object):
     def add_edge(self, source, target, type, time):
         new_idx = self.number_of_edges + 1
         # entry in edge data table
-        new_edge = pd.DataFrame(data={"BranchID": new_idx, "source": int(source), "target": int(target), "type": type,
-                                      "time": time}, index=range(1))
+        length = self._get_distance(int(source), int(target))
+        if source < target:
+            x, y = source, target
+        else:
+            x, y = target, source
+        new_edge = pd.DataFrame(data={"BranchID": new_idx, "source": int(x), "target": int(y),
+                                      "length":length, "type": type, "time": time}, index=range(1))
         self.edges = pd.merge(self.edges, new_edge, how="outer")
         # add edge in adjacency matrix
         self.adjacency[int(source), int(target)] = \
-            self.adjacency[int(target), int(source)] = \
-            self._get_distance(int(source), int(target))
+            self.adjacency[int(target), int(source)] = length
         # update counter
         self.number_of_edges += 1
         return new_idx
@@ -172,22 +176,28 @@ class PowerGrid(object):
         g.initialise()
 
         # update node data table
-        new_nodes = pd.DataFrame(data={"BusID": range(g.added_nodes),
+        new_nodes = pd.DataFrame(data={"BusID": 1 + np.arange(g.added_nodes),
                                        "lat": g.lat,
                                        "lon": g.lon,
                                        "time": np.repeat(-1, g.added_nodes),
-                                      "type": np.repeat("rpg_node", g.added_nodes)},
+                                       "type": np.repeat("rpg_node", g.added_nodes)},
                                  index=range(g.added_nodes))
         self.nodes = pd.merge(self.nodes, new_nodes, how="outer")
         # update node counter
         self.number_of_nodes += g.added_nodes
 
-        for edge, length in g.distance.iteritems():
+        for edge in g.init_edges:
+            if edge[0] < edge[1]:
+                x, y = edge[0], edge[1]
+            else:
+                x, y = edge[1], edge[0]
+            length = g.distance[edge]
             # update edge data table
-            new_edge = pd.DataFrame(data={"BranchID": self.number_of_edges,
-                                          "source": int(edge[0]),
-                                          "target": int(edge[1]),
+            new_edge = pd.DataFrame(data={"BranchID": 1 + self.number_of_edges,
+                                          "source": int(x),
+                                          "target": int(y),
                                           "type": "rpg_edge",
+                                          "length": length,
                                           "time": -1},
                                     index=range(1))
             self.edges = pd.merge(self.edges, new_edge, how="outer")
@@ -212,25 +222,41 @@ class PowerGrid(object):
                 self.add_edge(edge[0], edge[1], "line", np.squeeze(new_node.time))
 
     def save(self, path, raw=False):
-        import igraph as ig
+        pd.to_pickle(self.nodes, path + ".nodes")
+        pd.to_pickle(self.edges, path + ".edges")
+        np.save(path + ".adj", self.adjacency)
+        # import igraph as ig
+        #
+        # edgelist = zip(np.array(self.edges.source.values, dtype=np.int),
+        #                np.array(self.edges.target.values, dtype=np.int))
+        #
+        # g = ig.Graph()
+        #
+        # if raw:
+        #     # output just the topology without further data
+        #     g.__init__(n=self.number_of_nodes, edges=edgelist, directed=False)
+        # else:
+        #     for i in xrange(self.number_of_nodes):
+        #         g.add_vertex(i,
+        #                      BusID=int(self.nodes.BusID.values[i]),
+        #                      time=self.nodes.time.values[i],
+        #                      type=self.nodes.type.values[i],
+        #                      lat=self.nodes.lat.values[i],
+        #                      lon=self.nodes.lon.values[i]
+        #                      )
+        #
+        #     for i in xrange(self.number_of_edges):
+        #         g.add_edge(source=int(self.edges.source.values[i]),
+        #                    target=int(self.edges.target.values[i]),
+        #                    BranchID=int(self.edges.BranchID.values[i]),
+        #                    time=self.edges.time.values[i],
+        #                    type=self.edges.type.values[i]
+        #                    )
+        #
+        # g.write_picklez(path)
+        # g.write_graphml(path + ".graphml")
+        # g.write_dot(path + ".dot")
 
-        edgelist = zip(np.array(self.edges.source.values, dtype=np.int),
-                       np.array(self.edges.target.values, dtype=np.int))
-
-        g = ig.Graph()
-        g.__init__(n=self.number_of_nodes, edges=edgelist, directed=False)
-
-        if not raw:
-            g.vs["BusID"] = self.nodes.BusID.values
-            g.vs["time"] = self.nodes.time.values
-            g.vs["type"] = self.nodes.type.values
-            g.vs["lon"] = self.nodes.lon.values
-            g.vs["lat"] = self.nodes.lat.values
-            g.es["time"] = self.edges.time.values
-            g.es["type"] = self.edges.type.values
-            g.es["BranchID"] = self.edges.BranchID.values
-
-        g.write_picklez(path)
 
     def get_closest_node(self, source):
         # TODO: rework this
