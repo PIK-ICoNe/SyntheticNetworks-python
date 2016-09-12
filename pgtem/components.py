@@ -1,18 +1,71 @@
-__author__ = "Paul Schultz"
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
+__author__ = "Paul Schultz"
+__date__ = "Jun 21, 2016"
+__version__ = "v0.1"
+__copyright__ = "Copyright (C) 2016 Paul Schultz, GNU GPL 3"
+
+"""
+Module contains class PowerGrid as well as the classes Creator, Coordinator, Provider and Regulator.
+"""
+
+#TODO: description
+
+# Import NumPy for the array object and fast numerics.
 import numpy as np
+# Import Pandas for data structures.
 import pandas as pd
+# Import SciPy sparse DOK matrices to handle large adjacency matrices.
+# The DOK format is optimal when new entries are sequentially added.
 from scipy.sparse import dok_matrix
 
 
 class Creator(object):
+    """
+    Creator class
+
+    The class Creator contains methods for a "Creator"-agent
+    (an instance) to suppose new sites for power generation and loads.
+
+    This class can either be instantiated as a sink (load) or source (generator).
+
+    **Examples:**
+
+    >>> print Creator.sink()
+    Creator class.
+
+    """
 
     def __init__(self, type, **kwargs):
+        """
+        Initialise an instance of Creator.
+
+        Parameters
+        ----------
+        type: string
+            flag to determine how Creator is instantiated
+
+        """
         assert type in ["sink", "source"]
         self.type = type
 
     def __str__(self):
-        return "Creator class."
+        """
+        Output of passing a Creator instance to the print command.
+
+        Returns
+        -------
+        text: string
+
+        **Examples:**
+
+        >>> print Creator.sink()
+        Creator class.
+
+        """
+        text = "Creator class."
+        return text
 
     @classmethod
     def source(cls, **kwargs):
@@ -23,18 +76,72 @@ class Creator(object):
         return cls(type="sink", **kwargs)
 
     def new_node(self, BusID, time):
-        # draw random location
+        """
+        New node at a random location. Node type is determined by class instance.
+
+        Parameters
+        ----------
+        BusID: int
+            a unique node identifier
+        time: int/float
+            a timestamp attribute
+
+        Returns
+        -------
+        subgraph: DataFrame object
+            Table containing the following node attributes: BusID, lat, lon, time, type
+
+        **Examples:**
+        >>> c = Creator.source()
+        >>> print c.new_node(BusID=0, time=0) # doctest:+ELLIPSIS
+           BusID       lat       lon  time    type
+        ...
+
+        """
+        
         loc = np.random.random(2)
         return pd.DataFrame(data={"BusID": int(BusID), "lat": loc[0], "lon": loc[1], "time": time, "type":self.type},
         index=range(1))
 
 class Coordinator(object):
+    """
+        Coordinator class
+
+        The class Coordinator contains methods for a "Coordinator"-agent
+        (an instance) to do two things:
+        a) propose possible grid extensions to connect new sites.
+        b) negotiate between Grid Providers and the Regulator instance to find cheapest allowed extension.
+
+        **Examples:**
+
+        >>> print Coordinator()
+        Coordinator class.
+
+        """
 
     def __init__(self, **kwargs):
+        """
+        Initialise an instance of Coordinator.
+
+        """
         pass
 
     def __str__(self):
-        return "Coordinator class."
+        """
+        Output of passing a Coordinator instance to the print command.
+
+        Returns
+        -------
+        text: string
+
+        **Examples:**
+
+        >>> print Coordinator()
+        Coordinator class.
+
+        """
+        text = "Coordinator class."
+        return text
 
     def proposition(self, node, grid):
         assert isinstance(grid, PowerGrid)
@@ -79,13 +186,54 @@ class Coordinator(object):
 
 
 class Provider(object):
+    """
+    Provider class
+
+    The class Provider contains methods for a "Provider"-agent
+    (an instance) to put price tags on the grid extensions proposed
+    by the Coordinator instance.
+
+    This class can be instantiated as an LV, MV or HV (incl. UHV) grid provider.
+
+    The role of this agent might be extended in the future.
+
+    **Examples:**
+
+    >>> print Provider.HV()
+    Provider class.
+
+    """
 
     def __init__(self, type="HV", **kwargs):
+        """
+        Initialise an instance of Provider.
+
+        Parameters
+        ----------
+        type: string
+            flag to determine how Provider is instantiated
+
+        """
         assert type in ["LV", "MV", "HV"]
         self.type = type
 
     def __str__(self):
-        return "Provider class."
+        """
+        Output of passing a Provider instance to the print command.
+
+        Returns
+        -------
+        text: string
+
+        **Examples:**
+
+        >>> print Provider.HV()
+        Provider class.
+
+        """
+
+        text = "Provider class."
+        return text
 
     @classmethod
     def LV(cls, **kwargs):
@@ -105,12 +253,44 @@ class Provider(object):
 
 
 class Regulator(object):
+    """
+    Regulator class
+
+    The class Regulator contains methods for a "Regulator"-agent
+    (an instance) to evaluate wether grid extensions proposed by
+    a Coordinator agent comply with grid codes (== are allowed).
+
+    **Examples:**
+
+    >>> print Regulator()
+    Regulator class.
+
+    """
 
     def __init__(self, type="source", **kwargs):
+        """
+        Initialise an instance of Regulator.
+
+        """
         pass
 
     def __str__(self):
-        return "Regulator class."
+        """
+        Output of passing a Regulator instance to the print command.
+
+        Returns
+        -------
+        text: string
+
+        **Examples:**
+
+        >>> print Regulator()
+        Regulator class.
+
+        """
+
+        text = "Regulator class."
+        return text
 
     def evaluate(self, grid_extensions):
         return [True for edges in grid_extensions]
@@ -119,12 +299,36 @@ class Regulator(object):
 
 class PowerGrid(object):
     """
-    derive from igraph?
+    PowerGrid class
+
+    The class PowerGrid contains methods for a "PowerGrid"-agent
+    (an instance) to suppose new sites for power generation and loads.
+
+    **Examples:**
+
+    >>> print PowerGrid(n_final=10)
+    An instance of the PowerGrid class.
+    Final number of nodes: 10
+
     """
 
     def __init__(self, n_final):
+        """
+        Initialise an instance of PowerGrid.
+
+        Parameters
+        ----------
+        n_final: int
+            determines final number of nodes
+
+        """
+
         self.n_final = n_final
+
+        # empty adjacency
         self.adjacency = dok_matrix(np.zeros([self.n_final, self.n_final]))
+
+        # set internal counters for nodes and edges
         self.number_of_nodes = 0
         self.number_of_edges = 0
 
@@ -132,11 +336,28 @@ class PowerGrid(object):
         self.nodes = pd.DataFrame(columns=["BusID", "type", "lon", "lat", "time"])
         self.edges = pd.DataFrame(columns=["BranchID", "source", "target", "type", "time"])
 
-        # internal settings
+        # internal settings (do not change)
         self.distance_measure = "euclidean"
 
     def __str__(self):
-        pass
+        """
+        Output of passing a PowerGrid instance to the print command.
+
+        Returns
+        -------
+        text: string
+
+        **Examples:**
+
+        >>> print PowerGrid(n_final=10)
+        An instance of the PowerGrid class.
+        Final number of nodes: 10
+
+        """
+
+        text = "An instance of the PowerGrid class.\n"
+        text += "Final number of nodes: " + str(self.n_final)
+        return text
 
     def add_node(self, new_node):
         # entry in node data table
@@ -289,6 +510,6 @@ class PowerGrid(object):
 
 
 
-
 if __name__ == '__main__':
-    raise RuntimeWarning("Nothing will happen...")
+    import doctest
+    doctest.testmod(optionflags="ELLIPSIS")

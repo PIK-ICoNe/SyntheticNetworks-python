@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import awesomeplot.core as plt
 import pandas as pd
 from scipy.sparse import dok_matrix
