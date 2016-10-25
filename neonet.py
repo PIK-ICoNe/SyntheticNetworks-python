@@ -32,7 +32,7 @@ from scipy.sparse import dok_matrix
 from igraph import Graph, plot, palettes, rescale
 import os
 
-from rpgm_core import RPG
+from rpgm.rpgm_core import RPG
 
 class NeoNet(RPG):
     def __init__(self):
@@ -80,7 +80,7 @@ class NeoNet(RPG):
 def main():
     g = NeoNet()
 
-    g.set_params(n0=10, n=10, p=0.1, q=0.2)
+    g.set_params(n0=10, n=20, p=0.1, q=0.2)
     g.initialise()
     g.grow()
 

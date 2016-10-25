@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from components import *
+from pgtem.components import *
 
 def main():
 
     #from scipy.spatial import kdtree
     # TODO: use kdtree to get (approximate) distances in a point cloud quickly
 
-    ## init acttors
+    ## init actors
     producer = Creator.source()
     consumer = Creator.sink()
     coord = Coordinator()

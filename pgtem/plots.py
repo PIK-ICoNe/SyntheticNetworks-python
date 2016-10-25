@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.sparse import dok_matrix
 import numpy as np
 
-canvas = plt.AwesomePlot(output="paper")
+canvas = plt.Plot(output="paper")
 
 nodes = pd.read_pickle("test.network.nodes")
 edges = pd.read_pickle("test.network.edges")

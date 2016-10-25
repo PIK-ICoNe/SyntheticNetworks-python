@@ -72,7 +72,7 @@ class RPG(RpgAlgorithm):
             with open(self.netdir + self.identifier + ".gml.info", "w") as f:
                 f.write(self._stat + "\n")
 
-        return self.netdir + self.identifier + ".gml"
+        return os.path.join(self.netdir, self.identifier + ".gml")
 
 
     @property

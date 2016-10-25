@@ -386,6 +386,7 @@ class PowerGrid(object):
         return new_idx
 
     def import_from_rpg(self, g=None, **kwargs):
+        #TODO: recursive import ?!
         from rpgm.rpgm_algo import RpgAlgorithm
 
         if g is None:
