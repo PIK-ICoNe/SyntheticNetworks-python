@@ -1,0 +1,53 @@
+This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: power_grid_design.aux
+The style file: plainnat.bst
+Database file #1: references.bib.bib
+Warning--entry type for "50Hertz" isn't style-file defined
+--line 5 of file references.bib.bib
+Warning--entry type for "BURN" isn't style-file defined
+--line 15 of file references.bib.bib
+Warning--empty year in 50Hertz
+Warning--empty year in BURN
+You've used 9 entries,
+            2773 wiz_defined-function locations,
+            668 strings with 6695 characters,
+and the built_in function-call counts, 3946 in all, are:
+= -- 366
+> -- 219
+< -- 6
++ -- 75
+- -- 66
+* -- 328
+:= -- 631
+add.period$ -- 38
+call.type$ -- 9
+change.case$ -- 48
+chr.to.int$ -- 9
+cite$ -- 20
+duplicate$ -- 169
+empty$ -- 310
+format.name$ -- 79
+if$ -- 809
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 7
+newline$ -- 63
+num.names$ -- 36
+pop$ -- 87
+preamble$ -- 1
+purify$ -- 40
+quote$ -- 0
+skip$ -- 130
+stack$ -- 0
+substring$ -- 112
+swap$ -- 13
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 94
+warning$ -- 2
+while$ -- 35
+width$ -- 0
+write$ -- 141
+(There were 4 warnings)
