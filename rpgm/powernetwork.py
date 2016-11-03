@@ -33,7 +33,7 @@ from igraph import Graph
 
 # TODO: future interoperability with PyPSA, problem with v-attribute name already used in igraph
 # Import component specifications from PyPSA
-import components as com
+import grid_components as com
 
 # use pint to handle physical units
 # Conventions:
@@ -68,7 +68,7 @@ class PowerNetwork(Graph):
     loc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # position of the script
     output_dir = os.path.join(loc, "figures/")
 
-    # implemented components from components.py
+    # implemented components from grid_components.py
     implemented_components = ["generator", "load", "prosumer", "passive", "line", "transformer"]
 
     # TODO: ensure per unit system.
@@ -147,8 +147,8 @@ class PowerNetwork(Graph):
 
         >>> print PowerNetwork.SmallTestPowerGrid() # doctest: +ELLIPSIS
         IGRAPH U--- 5 6 --
-        + attr: Frequency (g), Identifier (g), SBase (g), Timestamp (g), _T (v), lat
-          (v), lon (v), _T (e)
+        + attr: Frequency (g), Identifier (g), PBase (g), Timestamp (g), Bus_ID (v),
+          _T (v), lat (v), lon (v), _T (e)
         + edges:
         0--1 0--1 1--2 1--3 2--3 3--4
         + SmallTestPowerGrid

@@ -5,11 +5,12 @@ import awesomeplot.core as plt
 import pandas as pd
 from scipy.sparse import dok_matrix
 import numpy as np
+from os.path import join, dirname
 
-canvas = plt.Plot(output="paper")
+canvas = plt.Plot(output="talk")
 
-nodes = pd.read_pickle("test.network.nodes")
-edges = pd.read_pickle("test.network.edges")
+nodes = pd.read_pickle(join(dirname(__file__), "networks", "test.network.nodes"))
+edges = pd.read_pickle(join(dirname(__file__), "networks", "test.network.edges"))
 
 N = len(nodes)
 m = len(edges)
@@ -43,3 +44,5 @@ canvas.add_network(adj,
                    axis_labels=["lat", "lon", "time"])
 
 canvas.show()
+
+canvas.save([join(dirname(__file__), "figures", name) for name in ["pgtem_test_3d", "pgtem_test_2d"]])

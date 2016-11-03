@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from pgtem.components import *
+from os.path import join, dirname
+
 
 def main():
 
@@ -17,10 +19,13 @@ def main():
 
     ## init empty power grid with desired number of nodes
     net = PowerGrid(100)
+    assert isinstance(net, PowerGrid)
 
     ####### initially, we might again have a MST ###########
 
     net.import_from_rpg(n=100, n0=10)
+
+    print net.number_of_nodes, net.number_of_edges
 
 
     ####### growth mechanism #######
@@ -47,8 +52,7 @@ def main():
 
     print net.nodes
 
-
-    net.save("test.network")
+    net.save(join(dirname(__file__), "networks", "test.network"))
 
 
 

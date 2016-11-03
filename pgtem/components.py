@@ -396,6 +396,7 @@ class PowerGrid(object):
 
         g.set_params(**kwargs)
         g.initialise()
+        g.grow()
 
         # update node data table
         new_nodes = pd.DataFrame(data={"BusID": 1 + np.arange(g.added_nodes),
@@ -408,7 +409,7 @@ class PowerGrid(object):
         # update node counter
         self.number_of_nodes += g.added_nodes
 
-        for edge in g.init_edges:
+        for edge in g.edge:
             if edge[0] < edge[1]:
                 x, y = edge[0], edge[1]
             else:
@@ -432,14 +433,13 @@ class PowerGrid(object):
         import igraph as ig
         pass
 
-    def update(self, new_node, edgelist):
+    def update(self, new_node=None, edgelist=None):
         # add new node and all edges in edgelist
 
-        self.add_node(new_node)
+        if not new_node is None:
+            self.add_node(new_node)
 
-        if len(edgelist) == 0:
-            pass
-        else:
+        if not edgelist is None:
             for edge in edgelist:
                 self.add_edge(edge[0], edge[1], "line", np.squeeze(new_node.time))
 
@@ -447,37 +447,6 @@ class PowerGrid(object):
         pd.to_pickle(self.nodes, path + ".nodes")
         pd.to_pickle(self.edges, path + ".edges")
         np.save(path + ".adj", self.adjacency)
-        # import igraph as ig
-        #
-        # edgelist = zip(np.array(self.edges.source.values, dtype=np.int),
-        #                np.array(self.edges.target.values, dtype=np.int))
-        #
-        # g = ig.Graph()
-        #
-        # if raw:
-        #     # output just the topology without further data
-        #     g.__init__(n=self.number_of_nodes, edges=edgelist, directed=False)
-        # else:
-        #     for i in xrange(self.number_of_nodes):
-        #         g.add_vertex(i,
-        #                      BusID=int(self.nodes.BusID.values[i]),
-        #                      time=self.nodes.time.values[i],
-        #                      type=self.nodes.type.values[i],
-        #                      lat=self.nodes.lat.values[i],
-        #                      lon=self.nodes.lon.values[i]
-        #                      )
-        #
-        #     for i in xrange(self.number_of_edges):
-        #         g.add_edge(source=int(self.edges.source.values[i]),
-        #                    target=int(self.edges.target.values[i]),
-        #                    BranchID=int(self.edges.BranchID.values[i]),
-        #                    time=self.edges.time.values[i],
-        #                    type=self.edges.type.values[i]
-        #                    )
-        #
-        # g.write_picklez(path)
-        # g.write_graphml(path + ".graphml")
-        # g.write_dot(path + ".dot")
 
 
     def get_closest_node(self, source):

@@ -29,7 +29,7 @@ mit 220 kV Oberspannung.
 
 
 #source:
-Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).
+Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control andong Cybernetics, 25(1).Ravn, H. F., Rygaard, J. M., & Wibbels, B. (1996). Power network design. Control and Cybernetics, 25(1).
 
 - main assumption is that all demand sites and production sites have fixed locations (extra sites cannot he introduced)
 - when one cable cannot be used, it should still be possible to redirect the flow through the network, such that all demand is met,
@@ -146,4 +146,35 @@ http://www.ct.upc.edu/termodinamica/RTEdata
 - Trivial clustering-degree correlations
 
 # source: book Electricity distribution network design
+
 chapter 1
+
+(p.3) - LV (<1kV), MV (1-36kV), HV (36-300kV), EHV/UHV (>300kV) 
+(p.6) - DC links to former soviet union, scandinavia, UK; i.e. scandinavia is dynamically separated (still true?) 
+(p.3) - higher-voltage systems can be added as overlays when lower levels become too heavily loaded, e.g. UK supergrid 275/400 in the 50's 
+(p.6) - EHV for high power over long distances, country interconnections 
+(p.7) - EHV and HV should designed to be robust against single-circuit faults (N-1 ?) 
+(p.7,17) - MV and LV in general operated as radial systems (open loops)
+(p.12) - length of LV line usually limited to 500m or less 
+(p.15) - HV typically build as mesh configuration
+(p.17) - number of substations connected to feeder is function of: voltage, distance, average demand
+
+chapter 8
+
+(p.148) - HV serve as distribution layer primarily, historically they have been superseded by EHV as trasnmission grids
+(p.149) - main role to supply HV/MV substations
+(p.152) - placement of HV/MV substations as close as possible to centre of high load-density area !
+
+chapter 9
+
+(p.166) - MV grids exist bcauseit's convenient for industrial loads and lines are MUCH cheaper then HV lines, other wise HV could directly supply LV ...
+(p.176) - almost always operated radially, although mesh could lead to lower voltage drops and losses, but control would be more complicated
+(p.181) - in urban areas, MV cables commonly buried along roads -> street network
+ 
+chapter 10
+
+(p.192) - radial design -> only a single in-feed
+(p.194) - average load density in cities can exceed 100 MW/km^2, rural just 10 kW/km^2
+(p.202) - in urban areas, LV grids are often close enough to be interconnected, still commonly operated as radial
+
+

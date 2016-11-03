@@ -81,7 +81,7 @@ class RpgAlgorithm(object):
         ##########################################
         self._initial_mst()
 
-        edge_mask = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        edge_mask = self.edgelist()
 
         if self.debug:
             print "I2", edge_mask
@@ -124,7 +124,7 @@ class RpgAlgorithm(object):
         assert self.added_edges == (len(self.adjacency.keys()) / 2)
 
         # label initial edges
-        self.init_edges = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        self.init_edges = self.edgelist()
 
         if self.debug and self.r > 0:
             assert ((dGmatrix - self._get_graph_distances())**2).sum() == 0 # check that update went well
@@ -152,6 +152,9 @@ class RpgAlgorithm(object):
 
         if self.r > 0:
             delattr(self, "dGmatrix")
+
+    def edgelist(self):
+        return sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
 
 
 
@@ -206,7 +209,7 @@ class RpgAlgorithm(object):
         ########################################
         if (np.random.random() < self.s) and len(self.adjacency) > 1:
             # choose link at random:
-            elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+            elist = self.edgelist()
 
             ei = np.random.randint(len(elist))
             e = elist[ei]
@@ -231,7 +234,7 @@ class RpgAlgorithm(object):
             if self.debug:
                 print "G5", (int(a), int(b))
 
-            #TODO: make shure (a, node) and (b, node) are not selected again?
+                #TODO: make shure (a, node) and (b, node) are not selected again?
         else:
             # step G2: link to nearest
             ##########################
@@ -285,7 +288,7 @@ class RpgAlgorithm(object):
                                        self.dGmatrix[:, [node]] +
                                        np.ones([self.n, self.n]) +
                                        self.dGmatrix[[target],:]
-                            ),
+                                       ),
                             self.dGmatrix[:,[target]] +
                             np.ones([self.n, self.n]) +
                             self.dGmatrix[[node], :]
@@ -333,7 +336,7 @@ class RpgAlgorithm(object):
                                        self.dGmatrix[:, [i2]] +
                                        np.ones([self.n, self.n]) +
                                        self.dGmatrix[[target], :]
-                            ),
+                                       ),
                             self.dGmatrix[:, [target]] +
                             np.ones([self.n, self.n]) +
                             self.dGmatrix[[i2], :]
@@ -387,7 +390,7 @@ class RpgAlgorithm(object):
 
 
     def _get_graph_distances(self):
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = self.edgelist()
         G = Graph(self.added_nodes)
         G.add_edges(elist)
         return np.array(G.shortest_paths())
@@ -451,12 +454,12 @@ def main():
 
     # create igraph object
     G = Graph(g.added_nodes)
-    G.add_edges(sorted(set([g._s(key) for key in g.adjacency.iterkeys()])))
+    G.add_edges(g.edgelist())
     G.vs["lat"] = g.lat
     G.vs["lon"] = g.lon
 
     return G
-    
+
 
 if __name__ == "__main__":
     main()
