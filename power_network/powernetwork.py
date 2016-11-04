@@ -27,7 +27,6 @@ import os
 import time
 
 import numpy as np
-from igraph import Graph
 from pint import UnitRegistry
 
 import grid_components as com
@@ -35,6 +34,107 @@ import grid_components as com
 ureg = UnitRegistry()
 ureg.define("var = W")
 
+
+from pyunicorn.core.resistive_network import ResNetwork
+
+class PowerUnicorn(ResNetwork):
+
+    def __init__(self, resistances, adjacency=None, edge_list=None):
+
+
+        super(PowerUnicorn, self).__init__(resistances,
+                                           grid=None,
+                                           adjacency=adjacency,
+                                           edge_list=edge_list,
+                                           directed=False,
+                                           node_weight_type=None,
+                                           silence_level=2)
+
+        self.flagWeave = False
+
+    @staticmethod
+    def SmallTestNetwork():
+        r"""
+                Create a small test network with unit resistances of the following
+                topology::
+
+                    0------1--------3------4
+                            \      /
+                             \    /
+                              \  /
+                               \/
+                               2
+
+                :rtype: Resistive Network instance
+                :return: an ResNetwork instance for testing purposes.
+
+                **Examples:**
+
+                >>> res = ResNetwork.SmallTestNetwork()
+                >>> isinstance(res, ResNetwork)
+                True
+                """
+        adjacency = np.array([[0, 1, 0, 0, 0],
+                              [1, 0, 1, 1, 0],
+                              [0, 1, 0, 1, 0],
+                              [0, 1, 1, 0, 1],
+                              [0, 0, 0, 1, 0]], dtype='int8')
+
+        # sample symmetric resistances w/ rational reciprocals
+        # resistances = np.array([2,2,8,2,8,8,2,8,10,10])
+
+        # # the resistances should be a full matrix
+        resistances = np.array([[0, 2, 0, 0, 0],
+                                [2, 0, 8, 2, 0],
+                                [0, 8, 0, 8, 0],
+                                [0, 2, 8, 0, 10],
+                                [0, 0, 0, 10, 0]])
+
+
+        return PowerUnicorn(resistances, adjacency=adjacency)
+
+    def add_buses(self, bus_list, v_types=None):
+        # TODO: think about this. adding nodes/links to existing instances seems to collide with pyunicorn philosophy
+        pass
+
+
+
+    def vertex_filter(self, att, val, op, return_subgraph=False):
+        """
+        Filters a PowerNetwork graph by a given vertex attribute.
+
+        Parameters
+        ----------
+        att: string
+            a valid vertex attribute name
+        val: int/float/string
+            value of vertex attribute used for filtering
+        op: string
+            filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin)
+        return_subgraph: bool, optional
+            if true, a new Graph object containing the filtered subgraph is returned,
+            else, vertices not fulfilling the op condition are deleted (default)
+
+        Returns
+        -------
+        subgraph: PowerNetwork object
+            returned only if return_subgraph=True
+
+        """
+
+        # TODO: check what happens to edges adjecent to deleted vertices
+
+        assert op in ["_eq", "_ne", "_lt", "_gt", "_le", "_ge", "_in", "_notin"]
+        assert att in self.graph.vs.attribute_names()
+        if return_subgraph:
+            subgraph = self.graph.vs.select(**{att + op: val}).subgraph()
+            return subgraph
+        else:
+            self.graph.vs.select(**{att + op: val}).delete()
+            pass
+
+
+from igraph import Graph
 
 class PowerNetwork(Graph):
     """
@@ -654,7 +754,7 @@ class PowerNetwork(Graph):
 ###############################################################################
 
 
-def main():
+def test_PowerNetwork():
     # g = PowerNetwork("test", edgelist, v_dict, e_dict)
     # g = PowerNetwork("test", n=n, edgelist=edgelist, v_dict=v_dict, e_dict=e_dict)
 
@@ -682,8 +782,18 @@ def main():
     g.visualise("plot")
     g.save("data")
 
+def test_PowerUnicorn():
+    g = PowerUnicorn.SmallTestNetwork()
+    assert isinstance(g, PowerUnicorn)
+
+
+
+    print g.betweenness()
+    print [g.vertex_current_flow_betweenness(i) for i in range(g.N)]
+
 
 if __name__ == "__main__":
-    main()
+    test_PowerUnicorn()
+    #test_PowerNetwork()
     #import doctest
     #doctest.testmod()
