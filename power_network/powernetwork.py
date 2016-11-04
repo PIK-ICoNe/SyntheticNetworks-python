@@ -27,6 +27,7 @@ import os
 import time
 
 import numpy as np
+import pandas as pd
 from pint import UnitRegistry
 
 import grid_components as com
@@ -36,14 +37,16 @@ ureg.define("var = W")
 
 
 from pyunicorn.core.resistive_network import ResNetwork
+from pyunicorn.core.geo_network import Grid
+
 
 class PowerUnicorn(ResNetwork):
 
-    def __init__(self, resistances, adjacency=None, edge_list=None):
-
+    def __init__(self, resistances, adjacency=None, edge_list=None, grid=None):
+        from inspect import getmembers, isclass
 
         super(PowerUnicorn, self).__init__(resistances,
-                                           grid=None,
+                                           grid=grid,
                                            adjacency=adjacency,
                                            edge_list=edge_list,
                                            directed=False,
@@ -51,6 +54,18 @@ class PowerUnicorn(ResNetwork):
                                            silence_level=2)
 
         self.flagWeave = False
+
+        # system base in MVA
+        self.pbase = 100. * ureg("MW")
+        self.vbase = 100. * ureg("kV")
+        # system reference frequency in Hertz
+        self.rfreq = 50. * ureg("Hz")
+
+        # setup data containers for all possible components
+        for name, cls in getmembers(com, isclass):
+            if not name in ["Bus", "Branch", "UnitRegistry"]:
+                setattr(self, name, pd.DataFrame(columns=cls.default().__dict__.keys()))
+
 
     @staticmethod
     def SmallTestNetwork():
@@ -93,45 +108,77 @@ class PowerUnicorn(ResNetwork):
 
         return PowerUnicorn(resistances, adjacency=adjacency)
 
+    @staticmethod
+    def setup_from_rpg(number_of_nodes, **params):
+        """
+        Creates a spatially embedded synthetic power grid topology.
+
+        Reference:
+            A Random Growth Model for Power Grids and Other Spatially Embedded Infrastructure Networks
+            Paul Schultz, Jobst Heitzig, and Juergen Kurths
+            Eur. Phys. J. Special Topics on "Resilient power grids and extreme events" (2014)
+            DOI: 10.1140/epjst/e2014-02279-6
+
+        Parameters
+        ----------
+        number_of_nodes: int
+            desired number of vertices
+        params: kwargs
+            custom parameters overwriting the default values of the RPG algorithm
+
+        """
+
+        from rpgm.rpgm_core import RpgAlgorithm
+
+        # crete random power grid
+        rpg = RpgAlgorithm()
+        assert isinstance(rpg, RpgAlgorithm)
+
+        rpg.set_params(n=number_of_nodes, n0=max(1, int(number_of_nodes / 10.)), r=1. / 3.)
+        rpg.set_params(**params)  # overwrites default parameter values
+        rpg.initialise()
+        rpg.grow()
+
+        adj = rpg.adjacency.todense()
+        res = np.zeros_like(adj)
+
+        for edge in rpg.edgelist():
+            res[edge[0], edge[1]] = res[edge[1], edge[0]] = rpg._get_distance(edge[0], edge[1])
+
+        grid = Grid(
+            time_seq=np.zeros(rpg.added_nodes),
+            lat_seq=np.array(rpg.lat),
+            lon_seq=np.array(rpg.lon),
+            silence_level=0
+        )
+
+        g = PowerUnicorn(resistances=res, adjacency=adj, grid=grid)
+
+        # assume all nodes have inertia, i.e. we model the HV layer
+
+        g.Generator = pd.merge(g.Generator,
+                               pd.DataFrame(data={"BusID": 1 + np.arange(rpg.added_nodes),
+                                                  "lat": rpg.lat,
+                                                  "lon": rpg.lon,
+                                                  "time": np.zeros(rpg.added_nodes),
+                                                  "type": np.repeat("rpg_node", rpg.added_nodes)},
+                                            index=range(rpg.added_nodes)
+                                            ),
+                               how="outer"
+                               )
+
+        print "Initiated PowerNetwork from rpg algorithm!"
+
+        return g
+
     def add_buses(self, bus_list, v_types=None):
         # TODO: think about this. adding nodes/links to existing instances seems to collide with pyunicorn philosophy
         pass
 
+    def setup_from_dataframes(self):
+        pass
 
 
-    def vertex_filter(self, att, val, op, return_subgraph=False):
-        """
-        Filters a PowerNetwork graph by a given vertex attribute.
-
-        Parameters
-        ----------
-        att: string
-            a valid vertex attribute name
-        val: int/float/string
-            value of vertex attribute used for filtering
-        op: string
-            filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin)
-        return_subgraph: bool, optional
-            if true, a new Graph object containing the filtered subgraph is returned,
-            else, vertices not fulfilling the op condition are deleted (default)
-
-        Returns
-        -------
-        subgraph: PowerNetwork object
-            returned only if return_subgraph=True
-
-        """
-
-        # TODO: check what happens to edges adjecent to deleted vertices
-
-        assert op in ["_eq", "_ne", "_lt", "_gt", "_le", "_ge", "_in", "_notin"]
-        assert att in self.graph.vs.attribute_names()
-        if return_subgraph:
-            subgraph = self.graph.vs.select(**{att + op: val}).subgraph()
-            return subgraph
-        else:
-            self.graph.vs.select(**{att + op: val}).delete()
-            pass
 
 
 from igraph import Graph
@@ -783,14 +830,21 @@ def test_PowerNetwork():
     g.save("data")
 
 def test_PowerUnicorn():
-    g = PowerUnicorn.SmallTestNetwork()
+    g = PowerUnicorn.setup_from_rpg(20)
     assert isinstance(g, PowerUnicorn)
 
+    b = g.betweenness()
+    bb = np.array([g.vertex_current_flow_betweenness(i) for i in range(g.N)])
 
+    print g.local_distance_weighted_vulnerability()
 
-    print g.betweenness()
-    print [g.vertex_current_flow_betweenness(i) for i in range(g.N)]
-
+    from awesomeplot.core import Plot
+    canvas = Plot(output="paper")
+    canvas.add_scatterplot(b, bb)
+    canvas.add_network(g.adjacency,
+                       styles={"layout": np.c_[g.Generator["lon"], g.Generator["lat"]]}
+                       )
+    canvas.show()
 
 if __name__ == "__main__":
     test_PowerUnicorn()
