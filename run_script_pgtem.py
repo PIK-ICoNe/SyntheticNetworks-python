@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pgtem.components import *
+from pgtem.agents import *
 from os.path import join, dirname
 
 
@@ -23,14 +23,11 @@ def main():
 
     ####### initially, we might again have a MST ###########
 
-    net.import_from_rpg(n=100, n0=10)
-
-    print net.number_of_nodes, net.number_of_edges
-
+    net.import_from_rpg(n=50, n0=10)
 
     ####### growth mechanism #######
 
-    for time in xrange(0, 20, 1):
+    for time in xrange(0, 50, 1):
 
         # propose new plant
         node = producer.new_node(net.number_of_nodes + 1, time)
@@ -44,7 +41,7 @@ def main():
             # coordinator contacts providers and the regulator
             allowed, ranking = coord.negotiation(possible_extensions, [goHV,], regulator)
 
-
+            # TODO: who is doing that?
             if allowed:
                 net.update(node, edgelist=ranking[0])
 

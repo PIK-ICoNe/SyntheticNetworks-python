@@ -1,0 +1,245 @@
+@startuml
+
+class PowerGrid {
+    nodes DataFrame
+    edges DataFrame
+    adjacency
+    distance_measure
+    n_final
+    number_of_edges
+    number_of_nodes
+    __
+    update()
+    +add_node()
+    +add_edge()
+    import_from_rpg()
+    get_closest_node()
+    ..
+    convert_to_igraph()
+    save()
+}
+
+PowerGrid --|> power_network.PowerNetwork : derive from?
+
+
+package "pgtem"  {
+
+    class Creator {
+        type
+        __
+        new_node()
+    }
+
+    class Sink implements Creator
+    class Source implements Creator
+
+    class Coordinator {
+        proposition()
+        negotiation()
+    }
+
+
+    class Provider{
+        type
+        __
+        get_costs()
+    }
+
+    class HV implements Provider
+    class MV implements Provider
+    class LV implements Provider
+
+    class Regulator {
+        evaluate()
+    }
+
+    mix_component NegotiatedExtensions
+    mix_component GridExtensions
+
+    PowerGrid <-- Creator :   new node
+
+    GridExtensions <- Coordinator : proposition
+    (PowerGrid, Creator) . GridExtensions : necessitates
+
+    GridExtensions --> Provider : get\n costs
+    Provider --> NegotiatedExtensions : cost\n ranking
+
+    GridExtensions --> Regulator : evaluation
+    Regulator --> NegotiatedExtensions : possible\n grid ext.
+
+    NegotiatedExtensions <- Coordinator : negotiation
+    NegotiatedExtensions -> PowerGrid : grid update
+
+}
+
+
+package power_network {
+    class PowerNetwork {
+        pbase
+        rfreq
+        vbase
+        __
+        add_buses()
+        add_branches()
+        vertex_filter()
+        edge_filter()
+        RandomPowerGrid()
+        SmallTestPowerGrid()
+        ..
+        convert_igraph_object()
+        save()
+        visualise()
+    }
+
+    class Bus {
+        Bus_ID
+        Name
+        Type
+        comments
+        lat
+        lon
+        operator
+        source
+        volt
+    }
+    class Generator implements Bus {
+        D
+        H
+        MBase
+        PG
+        PMax
+        PMin
+        QG
+        QMax
+        QMin
+        Status
+        __
+        default()
+    }
+    class Load implements Bus {
+        BS
+        GS
+        PD
+        QD
+        VA
+        VBase
+        VM
+        VMax
+        VMin
+        __
+        default()
+    }
+    class Prosumer implements Bus {
+        BS
+        D
+        GS
+        H
+        M
+        MBase
+        PD
+        PG
+        PMax
+        PMin
+        QD
+        QG
+        QMax
+        QMin
+        Status
+        VA
+        VBase
+        VM
+        VMax
+        VMin
+        kP
+        __
+        default()
+    }
+    class Passive implements Bus {
+        __
+        default()
+    }
+    class Branch {
+        Branch_ID
+        Bus1
+        Bus2
+        Name
+        Type
+        comments
+        operator
+        source
+        target
+        volt
+    }
+    class Line implements Branch {
+        B
+        C
+        G
+        I
+        L
+        R
+        X
+        cables
+        wires
+        __
+        default()
+    }
+    class  Transformer implements Branch {
+        AMax
+        AMin
+        Shift
+        Tap
+        __
+        default()
+    }
+
+    PowerNetwork <- rpgm.RpgAlgorithm : build\n on rpg
+    PowerNetwork  --|> igraph.Graph
+    Bus --> PowerNetwork : add bus
+    Branch --> PowerNetwork : add branch
+}
+
+
+package "rpgm" {
+
+    class RpgAlgorithm {
+        n
+        n0
+        p
+        q
+        r
+        s
+        added_edges
+        added_nodes
+        adjacency
+        dGmatrix
+        debug
+        distance
+        distance_measure
+        init_edges
+        lat
+        lon
+        low_memory
+        mst_edges
+        __
+        set_params()
+        initialise()
+        grow()
+        edgelist()
+    }
+
+    class RPG extends RpgAlgorithm {
+        basepath
+        figdir
+        identifier
+        netdir
+        __
+        save_graph()
+        stats()
+        plot_net()
+        bs_predictor()
+    }
+}
+
+
+
+@enduml
