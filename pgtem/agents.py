@@ -10,7 +10,7 @@ __copyright__ = "Copyright (C) 2016 Paul Schultz, GNU GPL 3"
 Module contains class PowerGrid as well as the classes Creator, Coordinator, Provider and Regulator.
 """
 
-#TODO: description
+#FIXME: description, doctests
 
 # Import NumPy for the array object and fast numerics.
 import numpy as np
@@ -20,8 +20,9 @@ import pandas as pd
 # The DOK format is optimal when new entries are sequentially added.
 from scipy.sparse import dok_matrix
 
-#TODO
-# Dervie PowerGrid from PowerNetwork
+#TODO: derive PowerGrid from PowerNetwork? work on existing PowerNetwork instance?
+#TODO: what happens if no new nodes are added but new lines are needed? -> Creator might construct new lines
+#TODO: "null model": agents make random decisions
 
 
 class Creator(object):

@@ -30,14 +30,13 @@ import numpy as np
 import pandas as pd
 from pint import UnitRegistry
 
-import grid_components as com
+import specifications as specs
 
 ureg = UnitRegistry()
 ureg.define("var = W")
 
-
+# derive PowerNetwork from PyUnicorn ResNetwork class
 from pyunicorn.core.resistive_network import ResNetwork
-from pyunicorn.core.geo_network import Grid
 
 
 class PowerUnicorn(ResNetwork):
@@ -53,7 +52,7 @@ class PowerUnicorn(ResNetwork):
                                            node_weight_type=None,
                                            silence_level=2)
 
-        self.flagWeave = False
+        # self.flagWeave = False
 
         # system base in MVA
         self.pbase = 100. * ureg("MW")
@@ -62,7 +61,7 @@ class PowerUnicorn(ResNetwork):
         self.rfreq = 50. * ureg("Hz")
 
         # setup data containers for all possible components
-        for name, cls in getmembers(com, isclass):
+        for name, cls in getmembers(specs, isclass):
             if not name in ["Bus", "Branch", "UnitRegistry"]:
                 setattr(self, name, pd.DataFrame(columns=cls.default().__dict__.keys()))
 
@@ -129,6 +128,7 @@ class PowerUnicorn(ResNetwork):
         """
 
         from rpgm.rpgm_core import RpgAlgorithm
+        from pyunicorn.core.geo_network import Grid
 
         # crete random power grid
         rpg = RpgAlgorithm()
@@ -205,7 +205,7 @@ class PowerNetwork(Graph):
     loc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # position of the script
     output_dir = os.path.join(loc, "figures/")
 
-    # implemented components from grid_components.py
+    # implemented components from specifications.py
     implemented_components = ["generator", "load", "prosumer", "passive", "line", "transformer"]
 
     # TODO: ensure per unit system.
@@ -617,11 +617,11 @@ class PowerNetwork(Graph):
         for i, bus in enumerate(bus_list):
 
             if v_types[i] == "generator":
-                T = com.Generator.default(Bus_ID=bus, Type=v_types[i])
+                T = specs.Generator.default(Bus_ID=bus, Type=v_types[i])
             elif v_types[i] == "load":
-                T = com.Load.default(Bus_ID=bus, Type=v_types[i])
+                T = specs.Load.default(Bus_ID=bus, Type=v_types[i])
             elif v_types[i] == "passive":
-                T = com.Passive.default(Bus_ID=bus, Type=v_types[i])
+                T = specs.Passive.default(Bus_ID=bus, Type=v_types[i])
             else:
                 raise ValueError("Not an implemented bus type!")
 
@@ -639,9 +639,9 @@ class PowerNetwork(Graph):
         for i, branch in enumerate(branch_list):
 
             if self.vs[branch[0]]['_T'].volt == self.vs[branch[1]]['_T'].volt:
-                T = com.Line.default(Branch_ID=n_branches+i, Type="line", Bus1=branch[0], Bus2=branch[1])
+                T = specs.Line.default(Branch_ID=n_branches + i, Type="line", Bus1=branch[0], Bus2=branch[1])
             else:
-                T = com.Transformer.default(Branch_ID=n_branches+i, Type="transformer", Bus1=branch[0], Bus2=branch[1])
+                T = specs.Transformer.default(Branch_ID=n_branches + i, Type="transformer", Bus1=branch[0], Bus2=branch[1])
 
             self.add_edge(branch[0], branch[1], _T=T)
 
@@ -655,28 +655,28 @@ class PowerNetwork(Graph):
 
         for i, bus in enumerate(self.vs):
             if v_types[i] == "generator":
-                bus["_T"] = com.Generator.default(Bus_ID=i, Type=v_types[i])
-                assert isinstance(bus["_T"], com.Generator)
+                bus["_T"] = specs.Generator.default(Bus_ID=i, Type=v_types[i])
+                assert isinstance(bus["_T"], specs.Generator)
             elif v_types[i] == "load":
-                bus["_T"] = com.Load.default(Bus_ID=i, Type=v_types[i])
-                assert isinstance(bus["_T"], com.Load)
+                bus["_T"] = specs.Load.default(Bus_ID=i, Type=v_types[i])
+                assert isinstance(bus["_T"], specs.Load)
             elif v_types[i] == "prosumer":
-                bus["_T"] = com.Prosumer.default(Bus_ID=i, Type=v_types[i])
-                assert isinstance(bus["_T"], com.Prosumer)
+                bus["_T"] = specs.Prosumer.default(Bus_ID=i, Type=v_types[i])
+                assert isinstance(bus["_T"], specs.Prosumer)
             elif v_types[i] == "passive":
-                bus["_T"] = com.Passive.default(Bus_ID=i, Type=v_types[i])
-                assert isinstance(bus["_T"], com.Passive)
+                bus["_T"] = specs.Passive.default(Bus_ID=i, Type=v_types[i])
+                assert isinstance(bus["_T"], specs.Passive)
             else:
                 raise ValueError("Not an implemented bus type!")
 
         for j, branch in enumerate(self.es):
             f, t = branch.tuple
             if e_types[j] == "line":
-                branch["_T"] = com.Line.default(Branch_ID=j, Type=e_types[j], Bus1=f, Bus2=t)
-                assert isinstance(branch["_T"], com.Line)
+                branch["_T"] = specs.Line.default(Branch_ID=j, Type=e_types[j], Bus1=f, Bus2=t)
+                assert isinstance(branch["_T"], specs.Line)
             elif e_types[j] == "transformer":
-                branch["_T"] = com.Transformer.default(Branch_ID=j, Type=e_types[j], Bus1=f, Bus2=t)
-                assert isinstance(branch["_T"], com.Transformer)
+                branch["_T"] = specs.Transformer.default(Branch_ID=j, Type=e_types[j], Bus1=f, Bus2=t)
+                assert isinstance(branch["_T"], specs.Transformer)
 
     @staticmethod
     def _move_attributes(_graph):
@@ -836,7 +836,7 @@ def test_PowerUnicorn():
     b = g.betweenness()
     bb = np.array([g.vertex_current_flow_betweenness(i) for i in range(g.N)])
 
-    print g.local_distance_weighted_vulnerability()
+    print g.angular_distance()
 
     from awesomeplot.core import Plot
     canvas = Plot(output="paper")
