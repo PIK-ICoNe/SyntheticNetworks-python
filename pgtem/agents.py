@@ -10,7 +10,7 @@ __copyright__ = "Copyright (C) 2016 Paul Schultz, GNU GPL 3"
 Module contains class PowerGrid as well as the classes Creator, Coordinator, Provider and Regulator.
 """
 
-#FIXME: description, doctests
+# FIXME: description, doctests
 
 # Import NumPy for the array object and fast numerics.
 import numpy as np
@@ -20,9 +20,10 @@ import pandas as pd
 # The DOK format is optimal when new entries are sequentially added.
 from scipy.sparse import dok_matrix
 
-#TODO: derive PowerGrid from PowerNetwork? work on existing PowerNetwork instance?
-#TODO: what happens if no new nodes are added but new lines are needed? -> Creator might construct new lines
-#TODO: "null model": agents make random decisions
+
+# TODO: derive PowerGrid from PowerNetwork? work on existing PowerNetwork instance?
+# TODO: what happens if no new nodes are added but new lines are needed? -> Creator might construct new lines
+# TODO: "null model": agents make random decisions
 
 
 class Creator(object):
@@ -34,7 +35,7 @@ class Creator(object):
 
     This class can either be instantiated as a sink (load) or source (generator).
 
-    **Examples:**
+
 
     >>> print Creator.sink()
     Creator class.
@@ -45,9 +46,9 @@ class Creator(object):
         """
         Initialise an instance of Creator.
 
-        Parameters
-        ----------
-        type: string
+
+
+        :param type: string
             flag to determine how Creator is instantiated
 
         """
@@ -58,11 +59,11 @@ class Creator(object):
         """
         Output of passing a Creator instance to the print command.
 
-        Returns
-        -------
-        text: string
+        Returns:
 
-        **Examples:**
+        	text: string
+
+
 
         >>> print Creator.sink()
         Creator class.
@@ -73,39 +74,47 @@ class Creator(object):
 
     @classmethod
     def source(cls, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
         return cls(type="source", **kwargs)
 
     @classmethod
     def sink(cls, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
         return cls(type="sink", **kwargs)
 
     def new_node(self, BusID, time):
         """
         New node at a random location. Node type is determined by class instance.
 
-        Parameters
-        ----------
-        BusID: int
+
+        :param BusID: int
             a unique node identifier
-        time: int/float
+        :param time: int/float
             a timestamp attribute
 
-        Returns
-        -------
-        subgraph: DataFrame object
+        :return subgraph: DataFrame object
             Table containing the following node attributes: BusID, lat, lon, time, type
 
-        **Examples:**
+
         >>> c = Creator.source()
         >>> print c.new_node(BusID=0, time=0) # doctest:+ELLIPSIS
-           BusID       lat       lon  time    type
+        BusID       lat       lon  time    type
         ...
 
         """
-        
+
         loc = np.random.random(2)
-        return pd.DataFrame(data={"BusID": int(BusID), "lat": loc[0], "lon": loc[1], "time": time, "type":self.type},
-        index=range(1))
+        return pd.DataFrame(data={"BusID": int(BusID), "lat": loc[0], "lon": loc[1], "time": time, "type": self.type},
+                            index=range(1))
+
 
 class Coordinator(object):
     """
@@ -116,7 +125,7 @@ class Coordinator(object):
         a) propose possible grid extensions to connect new sites.
         b) negotiate between Grid Providers and the Regulator instance to find cheapest allowed extension.
 
-        **Examples:**
+
 
         >>> print Coordinator()
         Coordinator class.
@@ -134,11 +143,11 @@ class Coordinator(object):
         """
         Output of passing a Coordinator instance to the print command.
 
-        Returns
-        -------
-        text: string
+        Returns:
 
-        **Examples:**
+	        text: string
+
+
 
         >>> print Coordinator()
         Coordinator class.
@@ -148,6 +157,12 @@ class Coordinator(object):
         return text
 
     def proposition(self, node, grid):
+        """
+
+        :param node:
+        :param grid:
+        :return:
+        """
         assert isinstance(grid, PowerGrid)
         assert isinstance(node, pd.DataFrame)
 
@@ -155,10 +170,17 @@ class Coordinator(object):
 
         new_loc = np.squeeze([node.lat.values, node.lon.values])
         closest_node = grid.get_closest_node(new_loc)
-        possible_extensions = [[(np.squeeze(node.BusID.values) - 1, closest_node),],] # list of edge lists
+        possible_extensions = [[(np.squeeze(node.BusID.values) - 1, closest_node), ], ]  # list of edge lists
         return possible_extensions
 
     def negotiation(self, possible_extensions, providers, regulator):
+        """
+
+        :param possible_extensions:
+        :param providers:
+        :param regulator:
+        :return:
+        """
 
         assert [isinstance(provider, Provider) for provider in providers]
         assert isinstance(regulator, Regulator)
@@ -185,8 +207,7 @@ class Coordinator(object):
             min_costs = np.min(costs, axis=0)
 
             # rank extensions by costs
-            return True, {i: v for i,v in enumerate(possible_extensions[np.argsort(min_costs)])}
-
+            return True, {i: v for i, v in enumerate(possible_extensions[np.argsort(min_costs)])}
 
 
 class Provider(object):
@@ -201,7 +222,7 @@ class Provider(object):
 
     The role of this agent might be extended in the future.
 
-    **Examples:**
+
 
     >>> print Provider.HV()
     Provider class.
@@ -212,10 +233,10 @@ class Provider(object):
         """
         Initialise an instance of Provider.
 
-        Parameters
-        ----------
-        type: string
-            flag to determine how Provider is instantiated
+        Args:
+
+	        type: string
+	            flag to determine how Provider is instantiated
 
         """
         assert type in ["LV", "MV", "HV"]
@@ -225,11 +246,11 @@ class Provider(object):
         """
         Output of passing a Provider instance to the print command.
 
-        Returns
-        -------
-        text: string
+        Returns:
 
-        **Examples:**
+        	text: string
+
+
 
         >>> print Provider.HV()
         Provider class.
@@ -241,19 +262,38 @@ class Provider(object):
 
     @classmethod
     def LV(cls, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
         return cls(type="LV", **kwargs)
 
     @classmethod
     def MV(cls, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
         return cls(type="MV", **kwargs)
 
     @classmethod
     def HV(cls, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
         return cls(type="HV", **kwargs)
 
     def get_costs(self, grid_extensions):
-        return [1e6 for edges in grid_extensions]
+        """
 
+        :param grid_extensions:
+        :return:
+        """
+        return [1e6 for edges in grid_extensions]
 
 
 class Regulator(object):
@@ -264,7 +304,7 @@ class Regulator(object):
     (an instance) to evaluate wether grid extensions proposed by
     a Coordinator agent comply with grid codes (== are allowed).
 
-    **Examples:**
+
 
     >>> print Regulator()
     Regulator class.
@@ -282,11 +322,11 @@ class Regulator(object):
         """
         Output of passing a Regulator instance to the print command.
 
-        Returns
-        -------
-        text: string
+        Returns:
 
-        **Examples:**
+			text: string
+
+
 
         >>> print Regulator()
         Regulator class.
@@ -297,8 +337,12 @@ class Regulator(object):
         return text
 
     def evaluate(self, grid_extensions):
-        return [True for edges in grid_extensions]
+        """
 
+        :param grid_extensions:
+        :return:
+        """
+        return [True for edges in grid_extensions]
 
 
 class PowerGrid(object):
@@ -308,7 +352,7 @@ class PowerGrid(object):
     The class PowerGrid contains methods for a "PowerGrid"-agent
     (an instance) to suppose new sites for power generation and loads.
 
-    **Examples:**
+
 
     >>> print PowerGrid(n_final=10)
     An instance of the PowerGrid class.
@@ -320,10 +364,10 @@ class PowerGrid(object):
         """
         Initialise an instance of PowerGrid.
 
-        Parameters
-        ----------
-        n_final: int
-            determines final number of nodes
+        Args:
+
+	        n_final: int
+	            determines final number of nodes
 
         """
 
@@ -347,11 +391,11 @@ class PowerGrid(object):
         """
         Output of passing a PowerGrid instance to the print command.
 
-        Returns
-        -------
-        text: string
+        Returns:
 
-        **Examples:**
+	        text: string
+
+
 
         >>> print PowerGrid(n_final=10)
         An instance of the PowerGrid class.
@@ -364,14 +408,28 @@ class PowerGrid(object):
         return text
 
     def add_node(self, new_node):
+        """
+
+        :param new_node:
+        :return:
+        """
+
         # entry in node data table
         self.nodes = pd.merge(self.nodes, new_node, how="outer")
         # update counter
         self.number_of_nodes += 1
-        #TODO: extend adjacency if number_of_nodes > len(adjacency)
-
+        # TODO: extend adjacency if number_of_nodes > len(adjacency)
 
     def add_edge(self, source, target, type, time):
+        """
+
+        :param source:
+        :param target:
+        :param type:
+        :param time:
+        :return:
+        """
+
         new_idx = self.number_of_edges + 1
         # entry in edge data table
         length = self._get_distance(int(source), int(target))
@@ -380,7 +438,7 @@ class PowerGrid(object):
         else:
             x, y = target, source
         new_edge = pd.DataFrame(data={"BranchID": new_idx, "source": int(x), "target": int(y),
-                                      "length":length, "type": type, "time": time}, index=range(1))
+                                      "length": length, "type": type, "time": time}, index=range(1))
         self.edges = pd.merge(self.edges, new_edge, how="outer")
         # add edge in adjacency matrix
         self.adjacency[int(source), int(target)] = \
@@ -390,7 +448,14 @@ class PowerGrid(object):
         return new_idx
 
     def import_from_rpg(self, g=None, **kwargs):
-        #TODO: recursive import ?!
+        """
+
+        :param g:
+        :param kwargs:
+        :return:
+        """
+
+        # TODO: recursive import ?!
         from rpgm.rpgm_algo import RpgAlgorithm
 
         if g is None:
@@ -434,25 +499,46 @@ class PowerGrid(object):
             self.number_of_edges += 1
 
     def convert_to_igraph(self):
+        """
+
+        :return:
+        """
         pass
 
     def update(self, new_node=None, edgelist=None):
+        """
+
+        :param new_node:
+        :param edgelist:
+        :return:
+        """
         # add new node and all edges in edgelist
 
-        if not new_node is None:
+        if new_node is not None:
             self.add_node(new_node)
 
-        if not edgelist is None:
+        if edgelist is not None:
             for edge in edgelist:
                 self.add_edge(edge[0], edge[1], "line", np.squeeze(new_node.time))
 
     def save(self, path, raw=False):
+        """
+
+        :param path:
+        :param raw:
+        :return:
+        """
         pd.to_pickle(self.nodes, path + ".nodes")
         pd.to_pickle(self.edges, path + ".edges")
         np.save(path + ".adj", self.adjacency)
 
-
     def get_closest_node(self, source):
+        """
+
+        :param source:
+        :return:
+        """
+
         # TODO: rework this
         # vertices need to be properly ordered for this to work, i.e. nodes in the connected component
         # should be labeled from 0 to connected-1
@@ -467,6 +553,12 @@ class PowerGrid(object):
         return target
 
     def _get_distance(self, u, v):
+        """
+
+        :param u:
+        :param v:
+        :return:
+        """
         x = np.array([self.nodes.lat.values[int(u)], self.nodes.lon.values[int(u)]])
         y = np.array([self.nodes.lat.values[int(v)], self.nodes.lon.values[int(v)]])
         if self.distance_measure == "euclidean":
@@ -478,11 +570,16 @@ class PowerGrid(object):
     def _euclidean(self, x, y):
         """
         return euclidean distance between x and y
-        """
-        return np.sqrt(sum((x - y) ** 2))
 
+        :param x:
+        :param y:
+        :return:
+        """
+
+        return np.sqrt(sum((x - y) ** 2))
 
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod(optionflags="ELLIPSIS")
