@@ -21,7 +21,7 @@ def main():
     net = PowerGrid(100)
     assert isinstance(net, PowerGrid)
 
-    ####### initially, we might again have a MST ###########
+    ####### initially, we might again have an existin grid, e.g. MST ###########
 
     net.import_from_rpg(n=50, n0=10)
 

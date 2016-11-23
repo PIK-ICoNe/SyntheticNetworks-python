@@ -155,7 +155,7 @@ class Coordinator(object):
 
         new_loc = np.squeeze([node.lat.values, node.lon.values])
         closest_node = grid.get_closest_node(new_loc)
-        possible_extensions = [[(np.squeeze(node.BusID.values) - 1, closest_node),],]
+        possible_extensions = [[(np.squeeze(node.BusID.values) - 1, closest_node),],] # list of edge lists
         return possible_extensions
 
     def negotiation(self, possible_extensions, providers, regulator):
