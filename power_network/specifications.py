@@ -28,17 +28,17 @@ class Bus(object):
     """
     Generic bus class containing attributes common to all vertices.
 
-    BusID <int>     : Numerical identifier
-    Name <str>      : name
-    Type <str>      : type of node
+    :param BusID: <int>     : Numerical identifier
+    :param Name: <str>      : name
+    :param Type: <str>      : type of node
                         1) generator
                         2) motor
                         3) slack bus
-    source <str>    : energy source
-    operator <str>  : grid operator
-    lon <float>     : longitude
-    lat <float>     : latitude
-    comments <str>  : open for comments
+    :param source: <str>    : energy source
+    :param operator: <str>  : grid operator
+    :param lon: <float>     : longitude
+    :param lat: <float>     : latitude
+    :param comments: <str>  : open for comments
     """
 
     def __init__(self):
@@ -75,18 +75,18 @@ class Generator(Bus):
     http://doi.org/10.1140/epjst/e2015-50265-9
 
 
-    PG <float>      : real power output
-    QG <float>      : reactive power output
-    QMax <float>    : max reactive power output
-    QMin <float>    : min reactive power output
-    MBase <float>   : total MVA base (apparent power)
-    Status <int>    : machine status
+    :param PG: <float>      : real power output
+    :param QG: <float>      : reactive power output
+    :param QMax: <float>    : max reactive power output
+    :param QMin: <float>    : min reactive power output
+    :param MBase: <float>   : total MVA base (apparent power)
+    :param Status: <int>    : machine status
                         > 0 in-service
                         < 0 off
-    Pmax <float>    : max real power output [MW]
-    Pmin <float>    : min real power output [MW]
-    H <float>       : inertia time constant
-    D <float>       : speed damping time constant
+    :param Pmax: <float>    : max real power output [MW]
+    :param Pmin: <float>    : min real power output [MW]
+    :param H: <float>       : inertia time constant
+    :param D: <float>       : speed damping time constant
     """
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__()
@@ -131,15 +131,15 @@ class Load(Bus):
     """
     Specification for loads.
 
-    PD <float>      : real power demand [MW]
-    QD <float>      : reactive power demand
-    GS <float>      : shunt conductance
-    BS <float>      : shunt susceptance
-    VM <float>      : voltage magnitude [kV]
-    VA <float>      : voltage angle
-    VBase <float>   : base voltage
-    VMax <float>    : max voltage magnitude
-    Vmin <float>    : min voltage magnitude
+    :param PD: <float>      : real power demand [MW]
+    :param QD: <float>      : reactive power demand
+    :param GS: <float>      : shunt conductance
+    :param BS: <float>      : shunt susceptance
+    :param VM: <float>      : voltage magnitude [kV]
+    :param VA: <float>      : voltage angle
+    :param VBase: <float>   : base voltage
+    :param VMax: <float>    : max voltage magnitude
+    :param Vmin: <float>    : min voltage magnitude
     """
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__()
@@ -177,29 +177,29 @@ class Load(Bus):
 
 class Prosumer(Bus):
     """
-    PG <float>      : real power output
-    QG <float>      : reactive power output
-    QMax <float>    : max reactive power output
-    QMin <float>    : min reactive power output
-    MBase <float>   : total MVA base (apparent power)
-    Status <int>    : machine status
+    :param PG: <float>      : real power output
+    :param QG: <float>      : reactive power output
+    :param QMax: <float>    : max reactive power output
+    :param QMin: <float>    : min reactive power output
+    :param MBase: <float>   : total MVA base (apparent power)
+    :param Status: <int>    : machine status
                         > 0 in-service
                         < 0 off
-    Pmax <float>    : max real power output [MW]
-    Pmin <float>    : min real power output [MW]
-    H <float>       : inertia time constant
-    D <float>       : speed damping time constant
+    :param Pmax: <float>    : max real power output [MW]
+    :param Pmin: <float>    : min real power output [MW]
+    :param H: <float>       : inertia time constant
+    :param D: <float>       : speed damping time constant
 
 
-    PD <float>      : real power demand [MW]
-    QD <float>      : reactive power demand
-    GS <float>      : shunt conductance
-    BS <float>      : shunt susceptance
-    VM <float>      : voltage magnitude [kV]
-    VA <float>      : voltage angle
-    VBase <float>   : base voltage
-    VMax <float>    : max voltage magnitude
-    Vmin <float>    : min voltage magnitude
+    :param PD: <float>      : real power demand [MW]
+    :param QD: <float>      : reactive power demand
+    :param GS: <float>      : shunt conductance
+    :param BS: <float>      : shunt susceptance
+    :param VM: <float>      : voltage magnitude [kV]
+    :param VA: <float>      : voltage angle
+    :param VBase: <float>   : base voltage
+    :param VMax: <float>    : max voltage magnitude
+    :param Vmin: <float>    : min voltage magnitude
     """
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__()
@@ -293,18 +293,18 @@ class Branch(object):
     """
     Generic branch class containing attributes common to all links.
 
-    BranchID <int>     : Numerical identifier
-    Name <str>      : name
-    Type <str>      : type of branch
+    :param BranchID: <int>     : Numerical identifier
+    :param Name: <str>      : name
+    :param Type: <str>      : type of branch
                         1) line
                         2) transformer
-    operator <str>  : grid operator
-    volt <float>    : operating voltage
-    Bus1 <str>      : source bus name
-    Bus2 <str>      : to bus  name
-    source <int>    : source bus ID
-    target <int>    : target bus  ID
-    comments <str>  : open for comments
+    :param operator: <str>  : grid operator
+    :param volt: <float>    : operating voltage
+    :param Bus1: <str>      : source bus name
+    :param Bus2: <str>      : to bus  name
+    :param source: <int>    : source bus ID
+    :param target: <int>    : target bus  ID
+    :param comments: <str>  : open for comments
     """
     def __init__(self):
         self.Branch_ID = 0
@@ -332,15 +332,15 @@ class Line(Branch):
     """
     Transmission line.
 
-    cables <int>    : number of electrically separated power-carrying conductors in a power line
-    wires <int>     : number of wires per power cable
-    R <float>       : resistance [ohm/km]
-    X <float>       : reactance [ohm/km]
-    C <float>       : capacity [nF/km]
-    G <float>       : conductance [µS/km]
-    B <float>       : susceptance [µS/km]
-    I <float>       : max. threshold current [A]
-    L <float>       : line length [km]
+    :param cables: <int>    : number of electrically separated power-carrying conductors in a power line
+    :param wires: <int>     : number of wires per power cable
+    :param R: <float>       : resistance [ohm/km]
+    :param X: <float>       : reactance [ohm/km]
+    :param C: <float>       : capacity [nF/km]
+    :param G: <float>       : conductance [µS/km]
+    :param B: <float>       : susceptance [µS/km]
+    :param I: <float>       : max. threshold current [A]
+    :param L: <float>       : line length [km]
 
     """
     def __init__(self, **kwargs):
@@ -379,10 +379,10 @@ class Transformer(Branch):
     """
     Transformer substation.
 
-    Tap <float>     : transformer off nominal turns ratio
-    Shift <float>   : transformer phase shift angle
-    Amin <float>    : minimum angle difference
-    Amax <float>    : maximum angle difference
+    :param Tap: <float>     : transformer off nominal turns ratio
+    :param Shift: <float>   : transformer phase shift angle
+    :param Amin: <float>    : minimum angle difference
+    :param Amax: <float>    : maximum angle difference
 
     """
 

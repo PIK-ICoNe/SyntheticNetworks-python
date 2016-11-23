@@ -42,6 +42,13 @@ from pyunicorn.core.resistive_network import ResNetwork
 class PowerUnicorn(ResNetwork):
 
     def __init__(self, resistances, adjacency=None, edge_list=None, grid=None):
+        """
+
+        :param resistances:
+        :param adjacency:
+        :param edge_list:
+        :param grid:
+        """
         from inspect import getmembers, isclass
 
         super(PowerUnicorn, self).__init__(resistances,
@@ -68,26 +75,27 @@ class PowerUnicorn(ResNetwork):
 
     @staticmethod
     def SmallTestNetwork():
-        r"""
-                Create a small test network with unit resistances of the following
-                topology::
+        """
+        Create a small test network with unit resistances of the following
+        topology::
 
-                    0------1--------3------4
-                            \      /
-                             \    /
-                              \  /
-                               \/
-                               2
+            0------1--------3------4
+                    \      /
+                     \    /
+                      \  /
+                       \/
+                       2
 
-                :rtype: Resistive Network instance
-                :return: an ResNetwork instance for testing purposes.
+        :rtype: Resistive Network instance
+        :return: an ResNetwork instance for testing purposes.
 
-                **Examples:**
 
-                >>> res = ResNetwork.SmallTestNetwork()
-                >>> isinstance(res, ResNetwork)
-                True
-                """
+
+        >>> res = ResNetwork.SmallTestNetwork()
+        >>> isinstance(res, ResNetwork)
+        True
+        """
+
         adjacency = np.array([[0, 1, 0, 0, 0],
                               [1, 0, 1, 1, 0],
                               [0, 1, 0, 1, 0],
@@ -118,11 +126,10 @@ class PowerUnicorn(ResNetwork):
             Eur. Phys. J. Special Topics on "Resilient power grids and extreme events" (2014)
             DOI: 10.1140/epjst/e2014-02279-6
 
-        Parameters
-        ----------
-        number_of_nodes: int
+
+        :param number_of_nodes: int
             desired number of vertices
-        params: kwargs
+        :param params: kwargs
             custom parameters overwriting the default values of the RPG algorithm
 
         """
@@ -172,10 +179,21 @@ class PowerUnicorn(ResNetwork):
         return g
 
     def add_buses(self, bus_list, v_types=None):
+        """
+
+        :param bus_list:
+        :param v_types:
+        :return:
+        """
+
         # TODO: think about this. adding nodes/links to existing instances seems to collide with pyunicorn philosophy
         pass
 
     def setup_from_dataframes(self):
+        """
+
+        :return:
+        """
         pass
 
 
@@ -191,7 +209,7 @@ class PowerNetwork(Graph):
     handle power grid topologies with a fixed set of vertex and edge properties needed
     for visualisation and simulations.
 
-    **Examples:**
+
 
     >>> print Graph.Lattice([3, 3], 1)
     IGRAPH U--- 9 18 --
@@ -218,19 +236,18 @@ class PowerNetwork(Graph):
         """
         Initialise an instance of PowerNetwork. This class is derived from an igraph.Graph class.
 
-        Parameters
-        ----------
-        name: string
+
+        :param name: string
             label used to identify a PowerNetwork object
-        n: int, optional
+        :param n: int, optional
             number of vertices
-        edgelist: list, optional
+        :param edgelist: list, optional
             list of pairs '(source, target)' defining edges
-        v_types: dict, optional
+        :param v_types: dict, optional
             dictionary containing attribute values for each vertex
             allowed attributes are set in Components:
             generator, passive, load
-        e_dict : dict, optional
+        :param e_dict : dict, optional
             dictionary containing attribute values for each edge
             allowed attributes are set in Components:
             line,transformer
@@ -276,11 +293,8 @@ class PowerNetwork(Graph):
         """
         Output of passing a PowerNetwork instance to the print command.
 
-        Returns
-        -------
-        text: string
 
-        **Examples:**
+        :return text: string
 
         >>> print PowerNetwork.SmallTestPowerGrid() # doctest: +ELLIPSIS
         IGRAPH U--- 5 6 --
@@ -310,10 +324,11 @@ class PowerNetwork(Graph):
 
         Element descriptors are converted to bus and branch attributes.
 
-        Parameters
-        ----------
-        filename: str
+
+        :param filename: str
             name of output graphML appended to self["Identifier"]
+        :param use_identifier:
+        :return:
 
         """
 
@@ -342,9 +357,8 @@ class PowerNetwork(Graph):
         """
         Basic Network visualisation.
 
-        Parameters
-        ----------
-        filename: str
+
+        :param filename: str
             name of output PDF appended to self["Identifier"]
 
         """
@@ -392,6 +406,11 @@ class PowerNetwork(Graph):
         )
 
         def vertex_shape(val):
+            """
+
+            :param val:
+            :return:
+            """
             if val == "generator":
                 return "circle"
             elif val == "load":
@@ -404,6 +423,11 @@ class PowerNetwork(Graph):
                 return "circle"
 
         def edge_width(val):
+            """
+
+            :param val:
+            :return:
+            """
             if val == "line":
                 return 2
             elif val == "transformer":
@@ -429,21 +453,19 @@ class PowerNetwork(Graph):
         """
         Filters a PowerNetwork graph by a given vertex attribute.
 
-        Parameters
-        ----------
-        att: string
+
+        :param att: string
             a valid vertex attribute name
-        val: int/float/string
+        :param val: int/float/string
             value of vertex attribute used for filtering
-        op: string
+        :param op: string
             filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin)
-        return_subgraph: bool, optional
+        :param return_subgraph: bool, optional
             if true, a new Graph object containing the filtered subgraph is returned,
             else, vertices not fulfilling the op condition are deleted (default)
 
-        Returns
-        -------
-        subgraph: PowerNetwork object
+
+        :return subgraph: PowerNetwork object
             returned only if return_subgraph=True
 
         """
@@ -463,22 +485,20 @@ class PowerNetwork(Graph):
         """
         Filters a PowerNetwork graph by a given edge attribute.
 
-        Parameters
-        ----------
-        att: string
+
+        :param att: string
             a valid vertex attribute name
             ignored if op is one of (_source, _target, _within, _between)
-        val: int/float/string
+        :param val: int/float/string
             value of edge attribute used for filtering
-        op: string
+        :param op: string
             filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin, _source, _target, _within, _between)
-        return_subgraph: bool, optional
+        :param return_subgraph: bool, optional
             if true, a new Graph object containing the filtered subgraph is returned,
             else, edges not fulfilling the op condition are deleted (default)
 
-        Returns
-        -------
-        subgraph: PowerNetwork object
+
+        :param subgraph: PowerNetwork object
             returned only if return_subgraph=True
 
         """
@@ -500,11 +520,10 @@ class PowerNetwork(Graph):
         """
         Builds a PowerNetwork instance directly upon an existing igraph object.
 
-        Parameters
-        ----------
-        graph: igraph.Graph
+
+        :param graph: igraph.Graph
             a Graph object
-        name: string
+        :param name: string
             label used to identify the created PowerNetwork onject
 
         """
@@ -523,12 +542,12 @@ class PowerNetwork(Graph):
             Eur. Phys. J. Special Topics on "Resilient power grids and extreme events" (2014)
             DOI: 10.1140/epjst/e2014-02279-6
 
-        Parameters
-        ----------
-        number_of_nodes: int
+
+        :param number_of_nodes: int
             desired number of vertices
-        params: kwargs
+        :param params: kwargs
             custom parameters overwriting the default values of the RPG algorithm
+        :return:
 
         """
 
@@ -568,15 +587,16 @@ class PowerNetwork(Graph):
         Creates a PowerNetwork instance with a small test network comprising
         basic properties of the following topology.
 
-            0------1--------3------4
-                    \      /
-                     \    /
-                      \  /
-                       \/
-                       2
 
+        0------1--------3------4
+                \      /
+                 \    /
+                  \  /
+                   \/
+                   2
 
-        **Examples:**
+        :return:
+
 
         >>> stpg = PowerNetwork.SmallTestPowerGrid()
         >>> isinstance(stpg, PowerNetwork)
@@ -607,6 +627,7 @@ class PowerNetwork(Graph):
         """
 
         :param bus_list: vertex sequence of Bus_IDs
+        :param v_types:
         :return:
         """
 
@@ -651,6 +672,12 @@ class PowerNetwork(Graph):
     ###############################################################################
 
     def _set_default_components(self, v_types=None, e_types=None):
+        """
+
+        :param v_types:
+        :param e_types:
+        :return:
+        """
         assert all(t in self.implemented_components for t in v_types)
 
         for i, bus in enumerate(self.vs):
@@ -731,11 +758,10 @@ class PowerNetwork(Graph):
         """
         Adding attributes to a vertex or link from a dictionary.
 
-        Parameters
-        ----------
-        obj: VertexSeq or EdgeSeq
+
+        :param obj: VertexSeq or EdgeSeq
             vertex or edge to add the attributes to
-        d: dict
+        :param d: dict
             attribute dictionary
 
         """
@@ -749,7 +775,8 @@ class PowerNetwork(Graph):
         """
         Returns ordered tuple.
 
-        **Examples:**
+        :param t: tuple
+        :return :
 
         >>> print PowerNetwork._sort((2, 1))
         (1, 2)
@@ -774,11 +801,22 @@ class PowerNetwork(Graph):
 
     @staticmethod
     def vertex_name_index(graph):
+        """
+
+        :param graph:
+        :return:
+        """
         raise NotImplementedError("Not supported yet.")
         # return dict((v, k) for k, v in enumerate(graph.vs["name"]))
 
     @staticmethod
     def graph_union_by_name(g1, g2):
+        """
+
+        :param g1:
+        :param g2:
+        :return:
+        """
         raise NotImplementedError("Not supported yet.")
         # result_names = sorted(set(g1.vs["name"]) + set(g2.vs["name"]))
         # result = Graph(len(result_names))
