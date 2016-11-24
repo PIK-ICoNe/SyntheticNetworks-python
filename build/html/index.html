@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Random Power Grid Topology Models’s documentation! &#8212; Random Power Grid Topology Models 2.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Random Power Grid Topology Models 2.1 documentation" href="#" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pgtem.agents">
+<span id="welcome-to-random-power-grid-topology-models-s-documentation"></span><h1>Welcome to Random Power Grid Topology Models&#8217;s documentation!<a class="headerlink" href="#module-pgtem.agents" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pgtem.agents.Coordinator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Coordinator</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Coordinator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Coordinator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinator class</p>
+<p>The class Coordinator contains methods for a &#8220;Coordinator&#8221;-agent
+(an instance) to do two things:
+a) propose possible grid extensions to connect new sites.
+b) negotiate between Grid Providers and the Regulator instance to find cheapest allowed extension.</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Coordinator</span><span class="p">()</span>
+<span class="go">Coordinator class.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Creator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Creator</code><span class="sig-paren">(</span><em>type</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creator class</p>
+<p>The class Creator contains methods for a &#8220;Creator&#8221;-agent
+(an instance) to suppose new sites for power generation and loads.</p>
+<p>This class can either be instantiated as a sink (load) or source (generator).</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Creator</span><span class="o">.</span><span class="n">sink</span><span class="p">()</span>
+<span class="go">Creator class.</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pgtem.agents.Creator.new_node">
+<code class="descname">new_node</code><span class="sig-paren">(</span><em>BusID</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator.new_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator.new_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>New node at a random location. Node type is determined by class instance.</p>
+<p>Args:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>BusID: int</dt>
+<dd>a unique node identifier</dd>
+<dt>time: int/float</dt>
+<dd>a timestamp attribute</dd>
+</dl>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>subgraph: DataFrame object</dt>
+<dd>Table containing the following node attributes: BusID, lat, lon, time, type</dd>
+</dl>
+</div></blockquote>
+<p><strong>Examples:</strong>
+&gt;&gt;&gt; c = Creator.source()
+&gt;&gt;&gt; print c.new_node(BusID=0, time=0) # doctest:+ELLIPSIS
+BusID       lat       lon  time    type
+...</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.PowerGrid">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">PowerGrid</code><span class="sig-paren">(</span><em>n_final</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>PowerGrid class</p>
+<p>The class PowerGrid contains methods for a &#8220;PowerGrid&#8221;-agent
+(an instance) to suppose new sites for power generation and loads.</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">PowerGrid</span><span class="p">(</span><span class="n">n_final</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">An instance of the PowerGrid class.</span>
+<span class="go">Final number of nodes: 10</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Provider">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Provider</code><span class="sig-paren">(</span><em>type='HV'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provider class</p>
+<p>The class Provider contains methods for a &#8220;Provider&#8221;-agent
+(an instance) to put price tags on the grid extensions proposed
+by the Coordinator instance.</p>
+<p>This class can be instantiated as an LV, MV or HV (incl. UHV) grid provider.</p>
+<p>The role of this agent might be extended in the future.</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Provider</span><span class="o">.</span><span class="n">HV</span><span class="p">()</span>
+<span class="go">Provider class.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Regulator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Regulator</code><span class="sig-paren">(</span><em>type='source'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Regulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Regulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regulator class</p>
+<p>The class Regulator contains methods for a &#8220;Regulator&#8221;-agent
+(an instance) to evaluate wether grid extensions proposed by
+a Coordinator agent comply with grid codes (== are allowed).</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Regulator</span><span class="p">()</span>
+<span class="go">Regulator class.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Random Power Grid Topology Models&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Paul Schultz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/index.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

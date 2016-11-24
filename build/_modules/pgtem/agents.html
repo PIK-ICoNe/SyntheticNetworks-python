@@ -1,0 +1,671 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pgtem.agents &#8212; Random Power Grid Topology Models 2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Random Power Grid Topology Models 2.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pgtem.agents</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Paul Schultz&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;Jun 21, 2016&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;v0.1&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2016 Paul Schultz, GNU GPL 3&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module contains class PowerGrid as well as the classes Creator, Coordinator, Provider and Regulator.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># FIXME: description, doctests</span>
+
+<span class="c1"># Import NumPy for the array object and fast numerics.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1"># Import Pandas for data structures.</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="c1"># Import SciPy sparse DOK matrices to handle large adjacency matrices.</span>
+<span class="c1"># The DOK format is optimal when new entries are sequentially added.</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">dok_matrix</span>
+
+
+<span class="c1"># TODO: derive PowerGrid from PowerNetwork? work on existing PowerNetwork instance?</span>
+<span class="c1"># TODO: what happens if no new nodes are added but new lines are needed? -&gt; Creator might construct new lines</span>
+<span class="c1"># TODO: &quot;null model&quot;: agents make random decisions</span>
+
+
+<div class="viewcode-block" id="Creator"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Creator">[docs]</a><span class="k">class</span> <span class="nc">Creator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creator class</span>
+
+<span class="sd">    The class Creator contains methods for a &quot;Creator&quot;-agent</span>
+<span class="sd">    (an instance) to suppose new sites for power generation and loads.</span>
+
+<span class="sd">    This class can either be instantiated as a sink (load) or source (generator).</span>
+
+
+
+<span class="sd">    &gt;&gt;&gt; print Creator.sink()</span>
+<span class="sd">    Creator class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of Creator.</span>
+
+
+
+<span class="sd">        :param type: string</span>
+<span class="sd">            flag to determine how Creator is instantiated</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sink&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a Creator instance to the print command.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        	text: string</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print Creator.sink()</span>
+<span class="sd">        Creator class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Creator class.&quot;</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Creator.source"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Creator.source">[docs]</a>    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Creator.sink"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Creator.sink">[docs]</a>    <span class="k">def</span> <span class="nf">sink</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;sink&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Creator.new_node"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Creator.new_node">[docs]</a>    <span class="k">def</span> <span class="nf">new_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BusID</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        New node at a random location. Node type is determined by class instance.</span>
+
+
+<span class="sd">        :param BusID: int</span>
+<span class="sd">            a unique node identifier</span>
+<span class="sd">        :param time: int/float</span>
+<span class="sd">            a timestamp attribute</span>
+
+<span class="sd">        :return subgraph: DataFrame object</span>
+<span class="sd">            Table containing the following node attributes: BusID, lat, lon, time, type</span>
+
+
+<span class="sd">        &gt;&gt;&gt; c = Creator.source()</span>
+<span class="sd">        &gt;&gt;&gt; print c.new_node(BusID=0, time=0) # doctest:+ELLIPSIS</span>
+<span class="sd">        BusID       lat       lon  time    type</span>
+<span class="sd">        ...</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;BusID&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">BusID</span><span class="p">),</span> <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">},</span>
+                            <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Coordinator"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Coordinator">[docs]</a><span class="k">class</span> <span class="nc">Coordinator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Coordinator class</span>
+
+<span class="sd">        The class Coordinator contains methods for a &quot;Coordinator&quot;-agent</span>
+<span class="sd">        (an instance) to do two things:</span>
+<span class="sd">        a) propose possible grid extensions to connect new sites.</span>
+<span class="sd">        b) negotiate between Grid Providers and the Regulator instance to find cheapest allowed extension.</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print Coordinator()</span>
+<span class="sd">        Coordinator class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of Coordinator.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a Coordinator instance to the print command.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">	        text: string</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print Coordinator()</span>
+<span class="sd">        Coordinator class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Coordinator class.&quot;</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+<div class="viewcode-block" id="Coordinator.proposition"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Coordinator.proposition">[docs]</a>    <span class="k">def</span> <span class="nf">proposition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param node:</span>
+<span class="sd">        :param grid:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">PowerGrid</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">grid</span><span class="o">.</span><span class="n">number_of_nodes</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="n">new_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">([</span><span class="n">node</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">values</span><span class="p">])</span>
+        <span class="n">closest_node</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">get_closest_node</span><span class="p">(</span><span class="n">new_loc</span><span class="p">)</span>
+        <span class="n">possible_extensions</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">BusID</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">closest_node</span><span class="p">),</span> <span class="p">],</span> <span class="p">]</span>  <span class="c1"># list of edge lists</span>
+        <span class="k">return</span> <span class="n">possible_extensions</span></div>
+
+<div class="viewcode-block" id="Coordinator.negotiation"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Coordinator.negotiation">[docs]</a>    <span class="k">def</span> <span class="nf">negotiation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">possible_extensions</span><span class="p">,</span> <span class="n">providers</span><span class="p">,</span> <span class="n">regulator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param possible_extensions:</span>
+<span class="sd">        :param providers:</span>
+<span class="sd">        :param regulator:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">Provider</span><span class="p">)</span> <span class="k">for</span> <span class="n">provider</span> <span class="ow">in</span> <span class="n">providers</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regulator</span><span class="p">,</span> <span class="n">Regulator</span><span class="p">)</span>
+
+        <span class="c1"># check for empty proposition</span>
+        <span class="k">assert</span> <span class="n">possible_extensions</span>
+
+        <span class="c1"># regulator filters possible extensions</span>
+        <span class="n">allowed</span> <span class="o">=</span> <span class="n">regulator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">possible_extensions</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+            <span class="c1"># stop if nothing is allowed</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># get costs for allowed extensions</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">allowed</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">allowed</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">possible_extensions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">possible_extensions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">possible_extensions</span><span class="p">)</span>
+
+            <span class="n">costs</span> <span class="o">=</span> <span class="p">[</span><span class="n">provider</span><span class="o">.</span><span class="n">get_costs</span><span class="p">(</span><span class="n">possible_extensions</span><span class="p">)</span> <span class="k">for</span> <span class="n">provider</span> <span class="ow">in</span> <span class="n">providers</span><span class="p">]</span>
+
+            <span class="n">min_costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">costs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># rank extensions by costs</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">possible_extensions</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">min_costs</span><span class="p">)])}</span></div></div>
+
+
+<div class="viewcode-block" id="Provider"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Provider">[docs]</a><span class="k">class</span> <span class="nc">Provider</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provider class</span>
+
+<span class="sd">    The class Provider contains methods for a &quot;Provider&quot;-agent</span>
+<span class="sd">    (an instance) to put price tags on the grid extensions proposed</span>
+<span class="sd">    by the Coordinator instance.</span>
+
+<span class="sd">    This class can be instantiated as an LV, MV or HV (incl. UHV) grid provider.</span>
+
+<span class="sd">    The role of this agent might be extended in the future.</span>
+
+
+
+<span class="sd">    &gt;&gt;&gt; print Provider.HV()</span>
+<span class="sd">    Provider class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;HV&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of Provider.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">	        type: string</span>
+<span class="sd">	            flag to determine how Provider is instantiated</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;LV&quot;</span><span class="p">,</span> <span class="s2">&quot;MV&quot;</span><span class="p">,</span> <span class="s2">&quot;HV&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a Provider instance to the print command.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        	text: string</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print Provider.HV()</span>
+<span class="sd">        Provider class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Provider class.&quot;</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Provider.LV"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Provider.LV">[docs]</a>    <span class="k">def</span> <span class="nf">LV</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;LV&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Provider.MV"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Provider.MV">[docs]</a>    <span class="k">def</span> <span class="nf">MV</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;MV&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Provider.HV"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Provider.HV">[docs]</a>    <span class="k">def</span> <span class="nf">HV</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;HV&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Provider.get_costs"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Provider.get_costs">[docs]</a>    <span class="k">def</span> <span class="nf">get_costs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_extensions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param grid_extensions:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="n">e6</span> <span class="k">for</span> <span class="n">edges</span> <span class="ow">in</span> <span class="n">grid_extensions</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="Regulator"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Regulator">[docs]</a><span class="k">class</span> <span class="nc">Regulator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Regulator class</span>
+
+<span class="sd">    The class Regulator contains methods for a &quot;Regulator&quot;-agent</span>
+<span class="sd">    (an instance) to evaluate wether grid extensions proposed by</span>
+<span class="sd">    a Coordinator agent comply with grid codes (== are allowed).</span>
+
+
+
+<span class="sd">    &gt;&gt;&gt; print Regulator()</span>
+<span class="sd">    Regulator class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of Regulator.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a Regulator instance to the print command.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">			text: string</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print Regulator()</span>
+<span class="sd">        Regulator class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Regulator class.&quot;</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+<div class="viewcode-block" id="Regulator.evaluate"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.Regulator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_extensions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param grid_extensions:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="kc">True</span> <span class="k">for</span> <span class="n">edges</span> <span class="ow">in</span> <span class="n">grid_extensions</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="PowerGrid"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid">[docs]</a><span class="k">class</span> <span class="nc">PowerGrid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PowerGrid class</span>
+
+<span class="sd">    The class PowerGrid contains methods for a &quot;PowerGrid&quot;-agent</span>
+<span class="sd">    (an instance) to suppose new sites for power generation and loads.</span>
+
+
+
+<span class="sd">    &gt;&gt;&gt; print PowerGrid(n_final=10)</span>
+<span class="sd">    An instance of the PowerGrid class.</span>
+<span class="sd">    Final number of nodes: 10</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_final</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of PowerGrid.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">	        n_final: int</span>
+<span class="sd">	            determines final number of nodes</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_final</span> <span class="o">=</span> <span class="n">n_final</span>
+
+        <span class="c1"># empty adjacency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span> <span class="o">=</span> <span class="n">dok_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_final</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_final</span><span class="p">]))</span>
+
+        <span class="c1"># set internal counters for nodes and edges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_edges</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># data containers for nodes and edges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;BusID&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;BranchID&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">])</span>
+
+        <span class="c1"># internal settings (do not change)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance_measure</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a PowerGrid instance to the print command.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">	        text: string</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; print PowerGrid(n_final=10)</span>
+<span class="sd">        An instance of the PowerGrid class.</span>
+<span class="sd">        Final number of nodes: 10</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;An instance of the PowerGrid class.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;Final number of nodes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_final</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+<div class="viewcode-block" id="PowerGrid.add_node"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param new_node:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># entry in node data table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+        <span class="c1"># update counter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span> <span class="o">+=</span> <span class="mi">1</span></div>
+        <span class="c1"># TODO: extend adjacency if number_of_nodes &gt; len(adjacency)</span>
+
+<div class="viewcode-block" id="PowerGrid.add_edge"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param source:</span>
+<span class="sd">        :param target:</span>
+<span class="sd">        :param type:</span>
+<span class="sd">        :param time:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">new_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_edges</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c1"># entry in edge data table</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">target</span><span class="p">,</span> <span class="n">source</span>
+        <span class="n">new_edge</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;BranchID&quot;</span><span class="p">:</span> <span class="n">new_idx</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+                                      <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="n">length</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="n">new_edge</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+        <span class="c1"># add edge in adjacency matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">source</span><span class="p">)]</span> <span class="o">=</span> <span class="n">length</span>
+        <span class="c1"># update counter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_edges</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">new_idx</span></div>
+
+<div class="viewcode-block" id="PowerGrid.import_from_rpg"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.import_from_rpg">[docs]</a>    <span class="k">def</span> <span class="nf">import_from_rpg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param g:</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: recursive import ?!</span>
+        <span class="kn">from</span> <span class="nn">rpgm.rpgm_algo</span> <span class="k">import</span> <span class="n">RpgAlgorithm</span>
+
+        <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">RpgAlgorithm</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">RpgAlgorithm</span><span class="p">)</span>
+
+        <span class="n">g</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">grow</span><span class="p">()</span>
+
+        <span class="c1"># update node data table</span>
+        <span class="n">new_nodes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;BusID&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">),</span>
+                                       <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                       <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
+                                       <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">),</span>
+                                       <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="s2">&quot;rpg_node&quot;</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">)},</span>
+                                 <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">new_nodes</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+        <span class="c1"># update node counter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span> <span class="o">+=</span> <span class="n">g</span><span class="o">.</span><span class="n">added_nodes</span>
+
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">edgelist</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">distance</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span>
+            <span class="c1"># update edge data table</span>
+            <span class="n">new_edge</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;BranchID&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">,</span>
+                                          <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                                          <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+                                          <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;rpg_edge&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="n">length</span><span class="p">,</span>
+                                          <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span>
+                                    <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="n">new_edge</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+            <span class="c1"># add edge to adjacency matrix</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">length</span>
+            <span class="c1"># update edge counter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_edges</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="PowerGrid.convert_to_igraph"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.convert_to_igraph">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_igraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="PowerGrid.update"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param new_node:</span>
+<span class="sd">        :param edgelist:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># add new node and all edges in edgelist</span>
+
+        <span class="k">if</span> <span class="n">new_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">edgelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">new_node</span><span class="o">.</span><span class="n">time</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PowerGrid.save"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param path:</span>
+<span class="sd">        :param raw:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;.nodes&quot;</span><span class="p">)</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;.edges&quot;</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;.adj&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PowerGrid.get_closest_node"><a class="viewcode-back" href="../../pgtem.html#pgtem.agents.PowerGrid.get_closest_node">[docs]</a>    <span class="k">def</span> <span class="nf">get_closest_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param source:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: rework this</span>
+        <span class="c1"># vertices need to be properly ordered for this to work, i.e. nodes in the connected component</span>
+        <span class="c1"># should be labeled from 0 to connected-1</span>
+        <span class="nb">min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">node</span><span class="p">]])</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_euclidean</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">:</span>
+                <span class="nb">min</span> <span class="o">=</span> <span class="n">d</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="k">return</span> <span class="n">target</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param u:</span>
+<span class="sd">        :param v:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="p">)]])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)]])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance_measure</span> <span class="o">==</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_euclidean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;ERROR: Not implemented yet.&quot;</span>
+            <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_euclidean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return euclidean distance between x and y</span>
+
+<span class="sd">        :param x:</span>
+<span class="sd">        :param y:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="s2">&quot;ELLIPSIS&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Paul Schultz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

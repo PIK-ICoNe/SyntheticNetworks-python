@@ -1,6 +1,8 @@
 Random Power Grid Model
 ************************
 
+_index.rst
+
 Core Algorithm extended by convenience functions
 ================================================
 

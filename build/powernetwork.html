@@ -1,0 +1,586 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PowerNetwork &#8212; Random Power Grid Topology Models 2.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Random Power Grid Topology Models 2.1 documentation" href="index.html" />
+    <link rel="next" title="Random Power Grid Model" href="rpgm.html" />
+    <link rel="prev" title="Power Grid Temporal Evolution Model" href="pgtem.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="powernetwork">
+<h1>PowerNetwork<a class="headerlink" href="#powernetwork" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-power_network.powernetwork">
+<span id="network-class"></span><h2>Network Class<a class="headerlink" href="#module-power_network.powernetwork" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="power_network.powernetwork.PowerNetwork">
+<em class="property">class </em><code class="descclassname">power_network.powernetwork.</code><code class="descname">PowerNetwork</code><span class="sig-paren">(</span><em>name=''</em>, <em>n=0</em>, <em>edgelist=None</em>, <em>v_types=None</em>, <em>e_types=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>PowerNetwork class</p>
+<p>The class PowerNetwork builds upon an igraph.Graph to provide a convenient way to
+handle power grid topologies with a fixed set of vertex and edge properties needed
+for visualisation and simulations.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Graph</span><span class="o">.</span><span class="n">Lattice</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">IGRAPH U--- 9 18 --</span>
+<span class="go">+ edges:</span>
+<span class="go">0 -- 1 2 3 6   2 -- 0 1 5 8   4 -- 1 3 5 7   6 -- 0 3 7 8   8 -- 2 5 6 7</span>
+<span class="go">1 -- 0 2 4 7   3 -- 0 4 5 6   5 -- 2 3 4 8   7 -- 1 4 6 8</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="power_network.powernetwork.PowerNetwork.RandomPowerGrid">
+<em class="property">classmethod </em><code class="descname">RandomPowerGrid</code><span class="sig-paren">(</span><em>number_of_nodes</em>, <em>**params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.RandomPowerGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.RandomPowerGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a spatially embedded synthetic power grid topology.</p>
+<dl class="docutils">
+<dt>Reference:</dt>
+<dd>A Random Growth Model for Power Grids and Other Spatially Embedded Infrastructure Networks
+Paul Schultz, Jobst Heitzig, and Juergen Kurths
+Eur. Phys. J. Special Topics on &#8220;Resilient power grids and extreme events&#8221; (2014)
+DOI: 10.1140/epjst/e2014-02279-6</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>number_of_nodes</strong> &#8211; int
+desired number of vertices</li>
+<li><strong>params</strong> &#8211; kwargs
+custom parameters overwriting the default values of the RPG algorithm</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="power_network.powernetwork.PowerNetwork.SmallTestPowerGrid">
+<em class="property">classmethod </em><code class="descname">SmallTestPowerGrid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.SmallTestPowerGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.SmallTestPowerGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Small network for testing purposes.</p>
+<p>Creates a PowerNetwork instance with a small test network comprising
+basic properties of the following topology.</p>
+<dl class="docutils">
+<dt>0&#8212;&#8212;1&#8212;&#8212;&#8211;3&#8212;&#8212;4</dt>
+<dd><dl class="first last docutils">
+<dt>     /</dt>
+<dd><dl class="first last docutils">
+<dt>   /</dt>
+<dd><dl class="first last docutils">
+<dt> /</dt>
+<dd>/
+2</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stpg</span> <span class="o">=</span> <span class="n">PowerNetwork</span><span class="o">.</span><span class="n">SmallTestPowerGrid</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">stpg</span><span class="p">,</span> <span class="n">PowerNetwork</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">stpg</span><span class="o">.</span><span class="n">attributes</span><span class="p">()</span>
+<span class="go">[&#39;Timestamp&#39;, &#39;PBase&#39;, &#39;Frequency&#39;, &#39;Identifier&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.add_branches">
+<code class="descname">add_branches</code><span class="sig-paren">(</span><em>branch_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.add_branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.add_branches" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>branch_list</strong> &#8211; list of vertex tuples</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.add_buses">
+<code class="descname">add_buses</code><span class="sig-paren">(</span><em>bus_list</em>, <em>v_types=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.add_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.add_buses" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bus_list</strong> &#8211; vertex sequence of Bus_IDs</li>
+<li><strong>v_types</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="power_network.powernetwork.PowerNetwork.convert_igraph_object">
+<em class="property">classmethod </em><code class="descname">convert_igraph_object</code><span class="sig-paren">(</span><em>graph</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.convert_igraph_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.convert_igraph_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a PowerNetwork instance directly upon an existing igraph object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>graph</strong> &#8211; igraph.Graph
+a Graph object</li>
+<li><strong>name</strong> &#8211; string
+label used to identify the created PowerNetwork onject</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.edge_filter">
+<code class="descname">edge_filter</code><span class="sig-paren">(</span><em>att</em>, <em>val</em>, <em>op</em>, <em>return_subgraph=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.edge_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.edge_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters a PowerNetwork graph by a given edge attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>att</strong> &#8211; string
+a valid vertex attribute name
+ignored if op is one of (_source, _target, _within, _between)</li>
+<li><strong>val</strong> &#8211; int/float/string
+value of edge attribute used for filtering</li>
+<li><strong>op</strong> &#8211; string
+filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin, _source, _target, _within, _between)</li>
+<li><strong>return_subgraph</strong> &#8211; bool, optional
+if true, a new Graph object containing the filtered subgraph is returned,
+else, edges not fulfilling the op condition are deleted (default)</li>
+<li><strong>subgraph</strong> &#8211; PowerNetwork object
+returned only if return_subgraph=True</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="power_network.powernetwork.PowerNetwork.graph_union_by_name">
+<em class="property">static </em><code class="descname">graph_union_by_name</code><span class="sig-paren">(</span><em>g1</em>, <em>g2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.graph_union_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.graph_union_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>g1</strong> &#8211; </li>
+<li><strong>g2</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em>, <em>use_identifier=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a PowerNetwork instance to a GraphML file.</p>
+<p>Element descriptors are converted to bus and branch attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; str
+name of output graphML appended to self[&#8220;Identifier&#8221;]</li>
+<li><strong>use_identifier</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.vertex_filter">
+<code class="descname">vertex_filter</code><span class="sig-paren">(</span><em>att</em>, <em>val</em>, <em>op</em>, <em>return_subgraph=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.vertex_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.vertex_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters a PowerNetwork graph by a given vertex attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>att</strong> &#8211; string
+a valid vertex attribute name</li>
+<li><strong>val</strong> &#8211; int/float/string
+value of vertex attribute used for filtering</li>
+<li><strong>op</strong> &#8211; string
+filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin)</li>
+<li><strong>return_subgraph</strong> &#8211; bool, optional
+if true, a new Graph object containing the filtered subgraph is returned,
+else, vertices not fulfilling the op condition are deleted (default)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return subgraph:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">PowerNetwork object
+returned only if return_subgraph=True</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="power_network.powernetwork.PowerNetwork.vertex_name_index">
+<em class="property">static </em><code class="descname">vertex_name_index</code><span class="sig-paren">(</span><em>graph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.vertex_name_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.vertex_name_index" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>graph</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="power_network.powernetwork.PowerNetwork.visualise">
+<code class="descname">visualise</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/powernetwork.html#PowerNetwork.visualise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.powernetwork.PowerNetwork.visualise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic Network visualisation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; str
+name of output PDF appended to self[&#8220;Identifier&#8221;]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-power_network.specifications">
+<span id="specifications"></span><h2>Specifications<a class="headerlink" href="#module-power_network.specifications" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="power_network.specifications.Branch">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Branch</code><a class="reference internal" href="_modules/power_network/specifications.html#Branch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic branch class containing attributes common to all links.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>BranchID</strong> &#8211; &lt;int&gt;     : Numerical identifier</li>
+<li><strong>Name</strong> &#8211; &lt;str&gt;      : name</li>
+<li><strong>Type</strong> &#8211; &lt;str&gt;      : type of branch
+1) line
+2) transformer</li>
+<li><strong>operator</strong> &#8211; &lt;str&gt;  : grid operator</li>
+<li><strong>volt</strong> &#8211; &lt;float&gt;    : operating voltage</li>
+<li><strong>Bus1</strong> &#8211; &lt;str&gt;      : source bus name</li>
+<li><strong>Bus2</strong> &#8211; &lt;str&gt;      : to bus  name</li>
+<li><strong>source</strong> &#8211; &lt;int&gt;    : source bus ID</li>
+<li><strong>target</strong> &#8211; &lt;int&gt;    : target bus  ID</li>
+<li><strong>comments</strong> &#8211; &lt;str&gt;  : open for comments</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Bus">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Bus</code><a class="reference internal" href="_modules/power_network/specifications.html#Bus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Bus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic bus class containing attributes common to all vertices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>BusID</strong> &#8211; &lt;int&gt;     : Numerical identifier</li>
+<li><strong>Name</strong> &#8211; &lt;str&gt;      : name</li>
+<li><strong>Type</strong> &#8211; &lt;str&gt;      : type of node
+1) generator
+2) motor
+3) slack bus</li>
+<li><strong>source</strong> &#8211; &lt;str&gt;    : energy source</li>
+<li><strong>operator</strong> &#8211; &lt;str&gt;  : grid operator</li>
+<li><strong>lon</strong> &#8211; &lt;float&gt;     : longitude</li>
+<li><strong>lat</strong> &#8211; &lt;float&gt;     : latitude</li>
+<li><strong>comments</strong> &#8211; &lt;str&gt;  : open for comments</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Generator">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Generator</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specification for synchronous machine generators.</p>
+<p>For the definition of D and H, see the following publication:</p>
+<p>Auer, S., Kleis, K., Schultz, P., Kurths, J., &amp; Hellmann, F. (2016).
+The impact of model detail on power grid resilience measures.
+The European Physical Journal Special Topics, 225(3), 609–625.
+<a class="reference external" href="http://doi.org/10.1140/epjst/e2015-50265-9">http://doi.org/10.1140/epjst/e2015-50265-9</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>PG</strong> &#8211; &lt;float&gt;      : real power output</li>
+<li><strong>QG</strong> &#8211; &lt;float&gt;      : reactive power output</li>
+<li><strong>QMax</strong> &#8211; &lt;float&gt;    : max reactive power output</li>
+<li><strong>QMin</strong> &#8211; &lt;float&gt;    : min reactive power output</li>
+<li><strong>MBase</strong> &#8211; &lt;float&gt;   : total MVA base (apparent power)</li>
+<li><strong>Status</strong> &#8211; &lt;int&gt;    : machine status
+&gt; 0 in-service
+&lt; 0 off</li>
+<li><strong>Pmax</strong> &#8211; &lt;float&gt;    : max real power output [MW]</li>
+<li><strong>Pmin</strong> &#8211; &lt;float&gt;    : min real power output [MW]</li>
+<li><strong>H</strong> &#8211; &lt;float&gt;       : inertia time constant</li>
+<li><strong>D</strong> &#8211; &lt;float&gt;       : speed damping time constant</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Line">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Line</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transmission line.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cables</strong> &#8211; &lt;int&gt;    : number of electrically separated power-carrying conductors in a power line</li>
+<li><strong>wires</strong> &#8211; &lt;int&gt;     : number of wires per power cable</li>
+<li><strong>R</strong> &#8211; &lt;float&gt;       : resistance [ohm/km]</li>
+<li><strong>X</strong> &#8211; &lt;float&gt;       : reactance [ohm/km]</li>
+<li><strong>C</strong> &#8211; &lt;float&gt;       : capacity [nF/km]</li>
+<li><strong>G</strong> &#8211; &lt;float&gt;       : conductance [µS/km]</li>
+<li><strong>B</strong> &#8211; &lt;float&gt;       : susceptance [µS/km]</li>
+<li><strong>I</strong> &#8211; &lt;float&gt;       : max. threshold current [A]</li>
+<li><strong>L</strong> &#8211; &lt;float&gt;       : line length [km]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Load">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Load</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specification for loads.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>PD</strong> &#8211; &lt;float&gt;      : real power demand [MW]</li>
+<li><strong>QD</strong> &#8211; &lt;float&gt;      : reactive power demand</li>
+<li><strong>GS</strong> &#8211; &lt;float&gt;      : shunt conductance</li>
+<li><strong>BS</strong> &#8211; &lt;float&gt;      : shunt susceptance</li>
+<li><strong>VM</strong> &#8211; &lt;float&gt;      : voltage magnitude [kV]</li>
+<li><strong>VA</strong> &#8211; &lt;float&gt;      : voltage angle</li>
+<li><strong>VBase</strong> &#8211; &lt;float&gt;   : base voltage</li>
+<li><strong>VMax</strong> &#8211; &lt;float&gt;    : max voltage magnitude</li>
+<li><strong>Vmin</strong> &#8211; &lt;float&gt;    : min voltage magnitude</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Passive">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Passive</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Passive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Passive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specification of a passive bus where nothing happens, just power flows through.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Prosumer">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Prosumer</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Prosumer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Prosumer" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>PG</strong> &#8211; &lt;float&gt;      : real power output</li>
+<li><strong>QG</strong> &#8211; &lt;float&gt;      : reactive power output</li>
+<li><strong>QMax</strong> &#8211; &lt;float&gt;    : max reactive power output</li>
+<li><strong>QMin</strong> &#8211; &lt;float&gt;    : min reactive power output</li>
+<li><strong>MBase</strong> &#8211; &lt;float&gt;   : total MVA base (apparent power)</li>
+<li><strong>Status</strong> &#8211; &lt;int&gt;    : machine status
+&gt; 0 in-service
+&lt; 0 off</li>
+<li><strong>Pmax</strong> &#8211; &lt;float&gt;    : max real power output [MW]</li>
+<li><strong>Pmin</strong> &#8211; &lt;float&gt;    : min real power output [MW]</li>
+<li><strong>H</strong> &#8211; &lt;float&gt;       : inertia time constant</li>
+<li><strong>D</strong> &#8211; &lt;float&gt;       : speed damping time constant</li>
+<li><strong>PD</strong> &#8211; &lt;float&gt;      : real power demand [MW]</li>
+<li><strong>QD</strong> &#8211; &lt;float&gt;      : reactive power demand</li>
+<li><strong>GS</strong> &#8211; &lt;float&gt;      : shunt conductance</li>
+<li><strong>BS</strong> &#8211; &lt;float&gt;      : shunt susceptance</li>
+<li><strong>VM</strong> &#8211; &lt;float&gt;      : voltage magnitude [kV]</li>
+<li><strong>VA</strong> &#8211; &lt;float&gt;      : voltage angle</li>
+<li><strong>VBase</strong> &#8211; &lt;float&gt;   : base voltage</li>
+<li><strong>VMax</strong> &#8211; &lt;float&gt;    : max voltage magnitude</li>
+<li><strong>Vmin</strong> &#8211; &lt;float&gt;    : min voltage magnitude</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="power_network.specifications.Transformer">
+<em class="property">class </em><code class="descclassname">power_network.specifications.</code><code class="descname">Transformer</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/power_network/specifications.html#Transformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#power_network.specifications.Transformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transformer substation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Tap</strong> &#8211; &lt;float&gt;     : transformer off nominal turns ratio</li>
+<li><strong>Shift</strong> &#8211; &lt;float&gt;   : transformer phase shift angle</li>
+<li><strong>Amin</strong> &#8211; &lt;float&gt;    : minimum angle difference</li>
+<li><strong>Amax</strong> &#8211; &lt;float&gt;    : maximum angle difference</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PowerNetwork</a><ul>
+<li><a class="reference internal" href="#module-power_network.powernetwork">Network Class</a></li>
+<li><a class="reference internal" href="#module-power_network.specifications">Specifications</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pgtem.html" title="previous chapter">Power Grid Temporal Evolution Model</a></li>
+      <li>Next: <a href="rpgm.html" title="next chapter">Random Power Grid Model</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/powernetwork.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Paul Schultz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/powernetwork.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

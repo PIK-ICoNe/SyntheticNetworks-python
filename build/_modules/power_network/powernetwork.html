@@ -1,0 +1,977 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>power_network.powernetwork &#8212; Random Power Grid Topology Models 2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="Random Power Grid Topology Models 2.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for power_network.powernetwork</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Paul Schultz, pschultz@pik-potsdam.de&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2016 Paul Schultz, GNU GPL 3&quot;</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module contains class PowerNetwork.</span>
+
+<span class="sd">Provides a data structure power grid topologies with additional data</span>
+<span class="sd">assigned to vertices and edges. It is subclassed from igraph.Graph</span>
+<span class="sd">and inherits all methods from Graph objects.</span>
+
+<span class="sd">The class has the no instance variables.</span>
+
+<span class="sd">Overriden inherited methods::</span>
+
+<span class="sd">    (str)       __str__         : extended description</span>
+<span class="sd">    (NoneType)  save            : include file identifier and fixed file format to graphml</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="c1"># Import NumPy for the array object and fast numerics.</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pint</span> <span class="k">import</span> <span class="n">UnitRegistry</span>
+
+<span class="kn">import</span> <span class="nn">specifications</span> <span class="k">as</span> <span class="nn">specs</span>
+
+<span class="n">ureg</span> <span class="o">=</span> <span class="n">UnitRegistry</span><span class="p">()</span>
+<span class="n">ureg</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s2">&quot;var = W&quot;</span><span class="p">)</span>
+
+<span class="c1"># derive PowerNetwork from PyUnicorn ResNetwork class</span>
+<span class="kn">from</span> <span class="nn">pyunicorn.core.resistive_network</span> <span class="k">import</span> <span class="n">ResNetwork</span>
+
+
+<span class="k">class</span> <span class="nc">PowerUnicorn</span><span class="p">(</span><span class="n">ResNetwork</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resistances</span><span class="p">,</span> <span class="n">adjacency</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param resistances:</span>
+<span class="sd">        :param adjacency:</span>
+<span class="sd">        :param edge_list:</span>
+<span class="sd">        :param grid:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">getmembers</span><span class="p">,</span> <span class="n">isclass</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">PowerUnicorn</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">resistances</span><span class="p">,</span>
+                                           <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span>
+                                           <span class="n">adjacency</span><span class="o">=</span><span class="n">adjacency</span><span class="p">,</span>
+                                           <span class="n">edge_list</span><span class="o">=</span><span class="n">edge_list</span><span class="p">,</span>
+                                           <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                           <span class="n">node_weight_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                           <span class="n">silence_level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># self.flagWeave = False</span>
+
+        <span class="c1"># system base in MVA</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbase</span> <span class="o">=</span> <span class="mf">100.</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;MW&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vbase</span> <span class="o">=</span> <span class="mf">100.</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;kV&quot;</span><span class="p">)</span>
+        <span class="c1"># system reference frequency in Hertz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfreq</span> <span class="o">=</span> <span class="mf">50.</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;Hz&quot;</span><span class="p">)</span>
+
+        <span class="c1"># setup data containers for all possible components</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">getmembers</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="n">isclass</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Bus&quot;</span><span class="p">,</span> <span class="s2">&quot;Branch&quot;</span><span class="p">,</span> <span class="s2">&quot;UnitRegistry&quot;</span><span class="p">]:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">default</span><span class="p">()</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">SmallTestNetwork</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a small test network with unit resistances of the following</span>
+<span class="sd">        topology::</span>
+
+<span class="sd">            0------1--------3------4</span>
+<span class="sd">                    \      /</span>
+<span class="sd">                     \    /</span>
+<span class="sd">                      \  /</span>
+<span class="sd">                       \/</span>
+<span class="sd">                       2</span>
+
+<span class="sd">        :rtype: Resistive Network instance</span>
+<span class="sd">        :return: an ResNetwork instance for testing purposes.</span>
+
+
+
+<span class="sd">        &gt;&gt;&gt; res = ResNetwork.SmallTestNetwork()</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(res, ResNetwork)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">adjacency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                              <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                              <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                              <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                              <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int8&#39;</span><span class="p">)</span>
+
+        <span class="c1"># sample symmetric resistances w/ rational reciprocals</span>
+        <span class="c1"># resistances = np.array([2,2,8,2,8,8,2,8,10,10])</span>
+
+        <span class="c1"># # the resistances should be a full matrix</span>
+        <span class="n">resistances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+
+
+        <span class="k">return</span> <span class="n">PowerUnicorn</span><span class="p">(</span><span class="n">resistances</span><span class="p">,</span> <span class="n">adjacency</span><span class="o">=</span><span class="n">adjacency</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">setup_from_rpg</span><span class="p">(</span><span class="n">number_of_nodes</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a spatially embedded synthetic power grid topology.</span>
+
+<span class="sd">        Reference:</span>
+<span class="sd">            A Random Growth Model for Power Grids and Other Spatially Embedded Infrastructure Networks</span>
+<span class="sd">            Paul Schultz, Jobst Heitzig, and Juergen Kurths</span>
+<span class="sd">            Eur. Phys. J. Special Topics on &quot;Resilient power grids and extreme events&quot; (2014)</span>
+<span class="sd">            DOI: 10.1140/epjst/e2014-02279-6</span>
+
+
+<span class="sd">        :param number_of_nodes: int</span>
+<span class="sd">            desired number of vertices</span>
+<span class="sd">        :param params: kwargs</span>
+<span class="sd">            custom parameters overwriting the default values of the RPG algorithm</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">rpgm.rpgm_core</span> <span class="k">import</span> <span class="n">RpgAlgorithm</span>
+        <span class="kn">from</span> <span class="nn">pyunicorn.core.geo_network</span> <span class="k">import</span> <span class="n">Grid</span>
+
+        <span class="c1"># crete random power grid</span>
+        <span class="n">rpg</span> <span class="o">=</span> <span class="n">RpgAlgorithm</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rpg</span><span class="p">,</span> <span class="n">RpgAlgorithm</span><span class="p">)</span>
+
+        <span class="n">rpg</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">number_of_nodes</span><span class="p">,</span> <span class="n">n0</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_nodes</span> <span class="o">/</span> <span class="mf">10.</span><span class="p">)),</span> <span class="n">r</span><span class="o">=</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>  <span class="c1"># overwrites default parameter values</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">grow</span><span class="p">()</span>
+
+        <span class="n">adj</span> <span class="o">=</span> <span class="n">rpg</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">adj</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">rpg</span><span class="o">.</span><span class="n">edgelist</span><span class="p">():</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">rpg</span><span class="o">.</span><span class="n">_get_distance</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span>
+            <span class="n">time_seq</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">),</span>
+            <span class="n">lat_seq</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">lat</span><span class="p">),</span>
+            <span class="n">lon_seq</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">lon</span><span class="p">),</span>
+            <span class="n">silence_level</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="n">PowerUnicorn</span><span class="p">(</span><span class="n">resistances</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">adjacency</span><span class="o">=</span><span class="n">adj</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+
+        <span class="c1"># assume all nodes have inertia, i.e. we model the HV layer</span>
+
+        <span class="n">g</span><span class="o">.</span><span class="n">Generator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span>
+                               <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;BusID&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">),</span>
+                                                  <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="n">rpg</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                                  <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="n">rpg</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
+                                                  <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">),</span>
+                                                  <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="s2">&quot;rpg_node&quot;</span><span class="p">,</span> <span class="n">rpg</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">)},</span>
+                                            <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">added_nodes</span><span class="p">)</span>
+                                            <span class="p">),</span>
+                               <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span>
+                               <span class="p">)</span>
+
+        <span class="nb">print</span> <span class="s2">&quot;Initiated PowerNetwork from rpg algorithm!&quot;</span>
+
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="nf">add_buses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bus_list</span><span class="p">,</span> <span class="n">v_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param bus_list:</span>
+<span class="sd">        :param v_types:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: think about this. adding nodes/links to existing instances seems to collide with pyunicorn philosophy</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">setup_from_dataframes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+
+
+
+<span class="kn">from</span> <span class="nn">igraph</span> <span class="k">import</span> <span class="n">Graph</span>
+
+<div class="viewcode-block" id="PowerNetwork"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork">[docs]</a><span class="k">class</span> <span class="nc">PowerNetwork</span><span class="p">(</span><span class="n">Graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PowerNetwork class</span>
+
+<span class="sd">    The class PowerNetwork builds upon an igraph.Graph to provide a convenient way to</span>
+<span class="sd">    handle power grid topologies with a fixed set of vertex and edge properties needed</span>
+<span class="sd">    for visualisation and simulations.</span>
+
+
+
+<span class="sd">    &gt;&gt;&gt; print Graph.Lattice([3, 3], 1)</span>
+<span class="sd">    IGRAPH U--- 9 18 --</span>
+<span class="sd">    + edges:</span>
+<span class="sd">    0 -- 1 2 3 6   2 -- 0 1 5 8   4 -- 1 3 5 7   6 -- 0 3 7 8   8 -- 2 5 6 7</span>
+<span class="sd">    1 -- 0 2 4 7   3 -- 0 4 5 6   5 -- 2 3 4 8   7 -- 1 4 6 8</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># set default output directory for figures / graphml</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">__file__</span><span class="p">)))</span>  <span class="c1"># position of the script</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;figures/&quot;</span><span class="p">)</span>
+
+    <span class="c1"># implemented components from specifications.py</span>
+    <span class="n">implemented_components</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;generator&quot;</span><span class="p">,</span> <span class="s2">&quot;load&quot;</span><span class="p">,</span> <span class="s2">&quot;prosumer&quot;</span><span class="p">,</span> <span class="s2">&quot;passive&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;transformer&quot;</span><span class="p">]</span>
+
+    <span class="c1"># TODO: ensure per unit system.</span>
+
+    <span class="c1">###############################################################################</span>
+    <span class="c1"># ##                       MAGIC FUNCTIONS                                 ## #</span>
+    <span class="c1">###############################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">v_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise an instance of PowerNetwork. This class is derived from an igraph.Graph class.</span>
+
+
+<span class="sd">        :param name: string</span>
+<span class="sd">            label used to identify a PowerNetwork object</span>
+<span class="sd">        :param n: int, optional</span>
+<span class="sd">            number of vertices</span>
+<span class="sd">        :param edgelist: list, optional</span>
+<span class="sd">            list of pairs &#39;(source, target)&#39; defining edges</span>
+<span class="sd">        :param v_types: dict, optional</span>
+<span class="sd">            dictionary containing attribute values for each vertex</span>
+<span class="sd">            allowed attributes are set in Components:</span>
+<span class="sd">            generator, passive, load</span>
+<span class="sd">        :param e_dict : dict, optional</span>
+<span class="sd">            dictionary containing attribute values for each edge</span>
+<span class="sd">            allowed attributes are set in Components:</span>
+<span class="sd">            line,transformer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">n</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid type of edgelist!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># system base in MVA</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbase</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;MW&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vbase</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;kV&quot;</span><span class="p">)</span>
+        <span class="c1"># system reference frequency in Hertz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfreq</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;Hz&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">edgelist</span><span class="p">,</span>
+            <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">graph_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Identifier&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                         <span class="s2">&quot;Timestamp&quot;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())),</span>
+                         <span class="s2">&quot;Frequency&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfreq</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                         <span class="s2">&quot;PBase&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbase</span><span class="o">.</span><span class="n">magnitude</span><span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># the following sets up descriptor instances for each vertex and link</span>
+        <span class="c1"># TODO: possibility to add external data</span>
+
+        <span class="k">if</span> <span class="n">v_types</span> <span class="ow">and</span> <span class="n">e_types</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_default_components</span><span class="p">(</span><span class="n">v_types</span><span class="p">,</span> <span class="n">e_types</span><span class="p">)</span>
+
+
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output of passing a PowerNetwork instance to the print command.</span>
+
+
+<span class="sd">        :return text: string</span>
+
+<span class="sd">        &gt;&gt;&gt; print PowerNetwork.SmallTestPowerGrid() # doctest: +ELLIPSIS</span>
+<span class="sd">        IGRAPH U--- 5 6 --</span>
+<span class="sd">        + attr: Frequency (g), Identifier (g), PBase (g), Timestamp (g), Bus_ID (v),</span>
+<span class="sd">          _T (v), lat (v), lon (v), _T (e)</span>
+<span class="sd">        + edges:</span>
+<span class="sd">        0--1 0--1 1--2 1--3 2--3 3--4</span>
+<span class="sd">        + SmallTestPowerGrid</span>
+<span class="sd">        ...</span>
+<span class="sd">        + Average degree: 2.4</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="n">Graph</span><span class="o">.</span><span class="n">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">+ &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;Identifier&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">+ &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;Timestamp&quot;</span><span class="p">]</span>
+        <span class="c1"># TODO: include some basic statistics here</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vcount</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">+ Average degree: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+    <span class="c1">###############################################################################</span>
+    <span class="c1"># ##                       PUBLIC FUNCTIONS                                ## #</span>
+    <span class="c1">###############################################################################</span>
+<div class="viewcode-block" id="PowerNetwork.save"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">use_identifier</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves a PowerNetwork instance to a GraphML file.</span>
+
+<span class="sd">        Element descriptors are converted to bus and branch attributes.</span>
+
+
+<span class="sd">        :param filename: str</span>
+<span class="sd">            name of output graphML appended to self[&quot;Identifier&quot;]</span>
+<span class="sd">        :param use_identifier:</span>
+<span class="sd">        :return:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">_graph</span><span class="o">.</span><span class="n">_move_attributes</span><span class="p">(</span><span class="n">_graph</span><span class="p">)</span>
+        <span class="c1">#print _graph.vs.attribute_names()</span>
+        <span class="n">_graph</span><span class="o">.</span><span class="n">_separate_units</span><span class="p">(</span><span class="n">_graph</span><span class="p">)</span>
+        <span class="c1">#print _graph.vs.attribute_names()</span>
+
+        <span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">use_identifier</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;Identifier&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">identifier</span> <span class="o">+</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.graphml&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">identifier</span> <span class="o">+</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.graphml&quot;</span><span class="p">)</span>
+
+        <span class="n">_graph</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;graphml&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">path</span></div>
+
+<div class="viewcode-block" id="PowerNetwork.visualise"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.visualise">[docs]</a>    <span class="k">def</span> <span class="nf">visualise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Basic Network visualisation.</span>
+
+
+<span class="sd">        :param filename: str</span>
+<span class="sd">            name of output PDF appended to self[&quot;Identifier&quot;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vcount</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Nothing to visualise, no vertices in the graph!&quot;</span>
+            <span class="k">return</span>
+
+        <span class="kn">from</span> <span class="nn">igraph</span> <span class="k">import</span> <span class="n">plot</span><span class="p">,</span> <span class="n">palettes</span>
+
+        <span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_graph</span><span class="p">,</span> <span class="n">PowerNetwork</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_move_attributes</span><span class="p">(</span><span class="n">_graph</span><span class="p">)</span>
+
+        <span class="c1"># dummy values for plotting if no further data is given</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">,</span> <span class="s2">&quot;_T&quot;</span><span class="p">):</span>
+            <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;volt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">220</span>
+            <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;volt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">220</span>
+            <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;volt&quot;</span><span class="p">])</span>
+
+        <span class="n">visual_style</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">margin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">mark_groups</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> \
+                <span class="k">else</span> <span class="p">{</span><span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">volt</span><span class="o">=</span><span class="n">l</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mf">256.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">levels</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">levels</span><span class="p">)},</span>
+            <span class="n">edge_color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="c1"># edge_curved=0.1, # does not work with multiple edges</span>
+            <span class="n">edge_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">edge_order_by</span><span class="o">=</span><span class="s2">&quot;volt&quot;</span><span class="p">,</span>  <span class="c1"># draw low-voltage grids first</span>
+            <span class="n">layout</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">],</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]),</span>
+            <span class="n">palette</span><span class="o">=</span><span class="n">palettes</span><span class="p">[</span><span class="s2">&quot;heat&quot;</span><span class="p">],</span>
+            <span class="n">vertex_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">vertex_shape</span><span class="o">=</span><span class="s2">&quot;circle&quot;</span><span class="p">,</span>
+            <span class="n">vertex_color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+            <span class="n">vertex_frame_color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
+            <span class="n">vertex_frame_width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">vertex_label</span><span class="o">=</span><span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Bus_ID&quot;</span><span class="p">],</span>
+            <span class="n">vertex_label_dist</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">vertex_label_color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">vertex_label_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+            <span class="n">vertex_label_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">vertex_order_by</span><span class="o">=</span><span class="s2">&quot;volt&quot;</span>  <span class="c1"># draw low-voltage grids first</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">vertex_shape</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">            :param val:</span>
+<span class="sd">            :return:</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;generator&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;circle&quot;</span>
+            <span class="k">elif</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;load&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;square&quot;</span>
+            <span class="k">elif</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;prosumer&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;circle&quot;</span>
+            <span class="k">elif</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;passive&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;diamond&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;circle&quot;</span>
+
+        <span class="k">def</span> <span class="nf">edge_width</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">            :param val:</span>
+<span class="sd">            :return:</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;line&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;transformer&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">6</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="n">visual_style</span><span class="p">[</span><span class="s2">&quot;vertex_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">vertex_shape</span><span class="p">,</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">])</span>
+        <span class="n">visual_style</span><span class="p">[</span><span class="s2">&quot;edge_width&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">edge_width</span><span class="p">,</span> <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">visual_style</span><span class="p">[</span><span class="s2">&quot;vertex_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Bus_ID&quot;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">visual_style</span><span class="p">[</span><span class="s2">&quot;vertex_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vcount</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]:</span>
+            <span class="n">visual_style</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_graph</span><span class="o">.</span><span class="n">layout_auto</span><span class="p">()</span>
+            <span class="nb">print</span> <span class="s2">&quot;Assign random layout for plotting.&quot;</span>
+
+        <span class="n">plot</span><span class="p">(</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">+</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;Identifier&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">visual_style</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PowerNetwork.vertex_filter"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.vertex_filter">[docs]</a>    <span class="k">def</span> <span class="nf">vertex_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">return_subgraph</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters a PowerNetwork graph by a given vertex attribute.</span>
+
+
+<span class="sd">        :param att: string</span>
+<span class="sd">            a valid vertex attribute name</span>
+<span class="sd">        :param val: int/float/string</span>
+<span class="sd">            value of vertex attribute used for filtering</span>
+<span class="sd">        :param op: string</span>
+<span class="sd">            filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin)</span>
+<span class="sd">        :param return_subgraph: bool, optional</span>
+<span class="sd">            if true, a new Graph object containing the filtered subgraph is returned,</span>
+<span class="sd">            else, vertices not fulfilling the op condition are deleted (default)</span>
+
+
+<span class="sd">        :return subgraph: PowerNetwork object</span>
+<span class="sd">            returned only if return_subgraph=True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: check what happens to edges adjecent to deleted vertices</span>
+
+        <span class="k">assert</span> <span class="n">op</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;_eq&quot;</span><span class="p">,</span> <span class="s2">&quot;_ne&quot;</span><span class="p">,</span> <span class="s2">&quot;_lt&quot;</span><span class="p">,</span> <span class="s2">&quot;_gt&quot;</span><span class="p">,</span> <span class="s2">&quot;_le&quot;</span><span class="p">,</span> <span class="s2">&quot;_ge&quot;</span><span class="p">,</span> <span class="s2">&quot;_in&quot;</span><span class="p">,</span> <span class="s2">&quot;_notin&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">att</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="o">.</span><span class="n">attribute_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">return_subgraph</span><span class="p">:</span>
+            <span class="n">subgraph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">att</span> <span class="o">+</span> <span class="n">op</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span><span class="o">.</span><span class="n">subgraph</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">subgraph</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">att</span> <span class="o">+</span> <span class="n">op</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="PowerNetwork.edge_filter"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.edge_filter">[docs]</a>    <span class="k">def</span> <span class="nf">edge_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">return_subgraph</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters a PowerNetwork graph by a given edge attribute.</span>
+
+
+<span class="sd">        :param att: string</span>
+<span class="sd">            a valid vertex attribute name</span>
+<span class="sd">            ignored if op is one of (_source, _target, _within, _between)</span>
+<span class="sd">        :param val: int/float/string</span>
+<span class="sd">            value of edge attribute used for filtering</span>
+<span class="sd">        :param op: string</span>
+<span class="sd">            filter operation, one of (_eq, _ne, _lt, _gt, _le, _ge, _in, _notin, _source, _target, _within, _between)</span>
+<span class="sd">        :param return_subgraph: bool, optional</span>
+<span class="sd">            if true, a new Graph object containing the filtered subgraph is returned,</span>
+<span class="sd">            else, edges not fulfilling the op condition are deleted (default)</span>
+
+
+<span class="sd">        :param subgraph: PowerNetwork object</span>
+<span class="sd">            returned only if return_subgraph=True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">op</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;_eq&quot;</span><span class="p">,</span> <span class="s2">&quot;_ne&quot;</span><span class="p">,</span> <span class="s2">&quot;_lt&quot;</span><span class="p">,</span> <span class="s2">&quot;_gt&quot;</span><span class="p">,</span> <span class="s2">&quot;_le&quot;</span><span class="p">,</span> <span class="s2">&quot;_ge&quot;</span><span class="p">,</span> <span class="s2">&quot;_in&quot;</span><span class="p">,</span> <span class="s2">&quot;_notin&quot;</span><span class="p">,</span> <span class="s2">&quot;_source&quot;</span><span class="p">,</span> <span class="s2">&quot;_target&quot;</span><span class="p">,</span> <span class="s2">&quot;_within&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;_between&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">op</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;_source&quot;</span><span class="p">,</span> <span class="s2">&quot;_target&quot;</span><span class="p">,</span> <span class="s2">&quot;_within&quot;</span><span class="p">,</span> <span class="s2">&quot;_between&quot;</span><span class="p">]:</span>
+            <span class="n">att</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">att</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">es</span><span class="o">.</span><span class="n">attribute_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">return_subgraph</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">es</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">att</span> <span class="o">+</span> <span class="n">op</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span><span class="o">.</span><span class="n">subgraph</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">es</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">att</span> <span class="o">+</span> <span class="n">op</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+            <span class="k">pass</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PowerNetwork.convert_igraph_object"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.convert_igraph_object">[docs]</a>    <span class="k">def</span> <span class="nf">convert_igraph_object</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a PowerNetwork instance directly upon an existing igraph object.</span>
+
+
+<span class="sd">        :param graph: igraph.Graph</span>
+<span class="sd">            a Graph object</span>
+<span class="sd">        :param name: string</span>
+<span class="sd">            label used to identify the created PowerNetwork onject</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">Graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vcount</span><span class="p">(),</span> <span class="n">edgelist</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edgelist</span><span class="p">())</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PowerNetwork.RandomPowerGrid"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.RandomPowerGrid">[docs]</a>    <span class="k">def</span> <span class="nf">RandomPowerGrid</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">number_of_nodes</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a spatially embedded synthetic power grid topology.</span>
+
+<span class="sd">        Reference:</span>
+<span class="sd">            A Random Growth Model for Power Grids and Other Spatially Embedded Infrastructure Networks</span>
+<span class="sd">            Paul Schultz, Jobst Heitzig, and Juergen Kurths</span>
+<span class="sd">            Eur. Phys. J. Special Topics on &quot;Resilient power grids and extreme events&quot; (2014)</span>
+<span class="sd">            DOI: 10.1140/epjst/e2014-02279-6</span>
+
+
+<span class="sd">        :param number_of_nodes: int</span>
+<span class="sd">            desired number of vertices</span>
+<span class="sd">        :param params: kwargs</span>
+<span class="sd">            custom parameters overwriting the default values of the RPG algorithm</span>
+<span class="sd">        :return:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">rpgm.rpgm_core</span> <span class="k">import</span> <span class="n">RpgAlgorithm</span>
+
+        <span class="c1"># crete random power grid</span>
+        <span class="n">rpg</span> <span class="o">=</span> <span class="n">RpgAlgorithm</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rpg</span><span class="p">,</span> <span class="n">RpgAlgorithm</span><span class="p">)</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">number_of_nodes</span><span class="p">,</span> <span class="n">n0</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_nodes</span> <span class="o">/</span> <span class="mf">10.</span><span class="p">)),</span> <span class="n">r</span><span class="o">=</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>  <span class="c1"># overwrites default parameter values</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+        <span class="n">rpg</span><span class="o">.</span><span class="n">grow</span><span class="p">()</span>
+        <span class="n">edgelist</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">rpg</span><span class="o">.</span><span class="n">_s</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">rpg</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">()]))</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;rpg (p,q,r,s,n0) = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">q</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> \
+                             <span class="nb">str</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rpg</span><span class="o">.</span><span class="n">n0</span><span class="p">),</span>
+                    <span class="n">n</span><span class="o">=</span><span class="n">number_of_nodes</span><span class="p">,</span>
+                    <span class="n">edgelist</span><span class="o">=</span><span class="n">edgelist</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># take care of attributes</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Bus_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_nodes</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rpg</span><span class="o">.</span><span class="n">lat</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rpg</span><span class="o">.</span><span class="n">lon</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;volt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">number_of_nodes</span><span class="p">)</span> <span class="o">*</span> <span class="mf">110.</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;kV&quot;</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;Branch_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">))</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">edgelist</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">edgelist</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">graph</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PowerNetwork.SmallTestPowerGrid"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.SmallTestPowerGrid">[docs]</a>    <span class="k">def</span> <span class="nf">SmallTestPowerGrid</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Small network for testing purposes.</span>
+
+<span class="sd">        Creates a PowerNetwork instance with a small test network comprising</span>
+<span class="sd">        basic properties of the following topology.</span>
+
+
+<span class="sd">        0------1--------3------4</span>
+<span class="sd">                \      /</span>
+<span class="sd">                 \    /</span>
+<span class="sd">                  \  /</span>
+<span class="sd">                   \/</span>
+<span class="sd">                   2</span>
+
+<span class="sd">        :return:</span>
+
+
+<span class="sd">        &gt;&gt;&gt; stpg = PowerNetwork.SmallTestPowerGrid()</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(stpg, PowerNetwork)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; print stpg.attributes()</span>
+<span class="sd">        [&#39;Timestamp&#39;, &#39;PBase&#39;, &#39;Frequency&#39;, &#39;Identifier&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">edgelist</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;SmallTestPowerGrid&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="n">edgelist</span><span class="p">)</span>
+
+        <span class="c1"># random bus locations</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;Bus_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">graph</span><span class="o">.</span><span class="n">_set_default_components</span><span class="p">([</span><span class="s2">&quot;generator&quot;</span><span class="p">,</span> <span class="s2">&quot;load&quot;</span><span class="p">,</span> <span class="s2">&quot;generator&quot;</span><span class="p">,</span> <span class="s2">&quot;passive&quot;</span><span class="p">,</span> <span class="s2">&quot;generator&quot;</span><span class="p">],</span>
+                                      <span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="s2">&quot;transformer&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">volt</span> <span class="o">=</span> <span class="mi">110</span> <span class="o">*</span> <span class="n">ureg</span><span class="p">(</span><span class="s2">&quot;kV&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">graph</span></div>
+
+<div class="viewcode-block" id="PowerNetwork.add_buses"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.add_buses">[docs]</a>    <span class="k">def</span> <span class="nf">add_buses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bus_list</span><span class="p">,</span> <span class="n">v_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param bus_list: vertex sequence of Bus_IDs</span>
+<span class="sd">        :param v_types:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#check for vertices already present</span>
+        <span class="n">new_vertices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">bus_list</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;Bus_ID&#39;</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_vertices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bus_list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bus</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bus_list</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;generator&quot;</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Generator</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">bus</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;load&quot;</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Load</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">bus</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;passive&quot;</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Passive</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">bus</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not an implemented bus type!&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_vertex</span><span class="p">(</span><span class="n">bus</span><span class="p">,</span> <span class="n">_T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PowerNetwork.add_branches"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.add_branches">[docs]</a>    <span class="k">def</span> <span class="nf">add_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param branch_list: list of vertex tuples</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_branches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecount</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">branch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">branch_list</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;_T&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">volt</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="s1">&#39;_T&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">volt</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Line</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Branch_ID</span><span class="o">=</span><span class="n">n_branches</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">Bus1</span><span class="o">=</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Bus2</span><span class="o">=</span><span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Branch_ID</span><span class="o">=</span><span class="n">n_branches</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="s2">&quot;transformer&quot;</span><span class="p">,</span> <span class="n">Bus1</span><span class="o">=</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Bus2</span><span class="o">=</span><span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">_T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span></div>
+
+
+    <span class="c1">###############################################################################</span>
+    <span class="c1"># ##                       PRIVATE FUNCTIONS                               ## #</span>
+    <span class="c1">###############################################################################</span>
+
+    <span class="k">def</span> <span class="nf">_set_default_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param v_types:</span>
+<span class="sd">        :param e_types:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">implemented_components</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">v_types</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bus</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;generator&quot;</span><span class="p">:</span>
+                <span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Generator</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;load&quot;</span><span class="p">:</span>
+                <span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Load</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Load</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;prosumer&quot;</span><span class="p">:</span>
+                <span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Prosumer</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Prosumer</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;passive&quot;</span><span class="p">:</span>
+                <span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Passive</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Bus_ID</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">v_types</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Passive</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not an implemented bus type!&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">branch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">es</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">branch</span><span class="o">.</span><span class="n">tuple</span>
+            <span class="k">if</span> <span class="n">e_types</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;line&quot;</span><span class="p">:</span>
+                <span class="n">branch</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Line</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Branch_ID</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">e_types</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">Bus1</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">Bus2</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Line</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">e_types</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;transformer&quot;</span><span class="p">:</span>
+                <span class="n">branch</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">Branch_ID</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="n">e_types</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">Bus1</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">Bus2</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">],</span> <span class="n">specs</span><span class="o">.</span><span class="n">Transformer</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_move_attributes</span><span class="p">(</span><span class="n">_graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; move attributes from &quot;_T&quot; to new dict, so that they are saved in gml-file, if &quot;_T&quot; exists</span>
+<span class="sd">            :param _graph a igraph object</span>
+<span class="sd">            :return:no return</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_graph</span><span class="p">,</span> <span class="n">PowerNetwork</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;_T&quot;</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="o">.</span><span class="n">attribute_names</span><span class="p">():</span>
+
+            <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">:</span>
+                <span class="n">_graph</span><span class="o">.</span><span class="n">_add_dict</span><span class="p">(</span><span class="n">bus</span><span class="p">,</span> <span class="n">bus</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">:</span>
+                <span class="n">_graph</span><span class="o">.</span><span class="n">_add_dict</span><span class="p">(</span><span class="n">branch</span><span class="p">,</span> <span class="n">branch</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+
+            <span class="k">del</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s2">&quot;_T&quot;</span><span class="p">]</span>
+
+            <span class="c1"># print &quot;Bus after deleting _T&quot;, bus</span>
+            <span class="c1"># print &quot;Bus3 in graph.vs:&quot; ,_graph.vs[3]</span>
+            <span class="c1"># print &quot;BUS_ID bus 3 in graph.vs:&quot;,_graph.vs[3][&quot;Bus_ID&quot;]</span>
+            <span class="c1"># print &quot;PG bus 3 in graph.vs:&quot;,_graph.vs[3][&quot;PG&quot;]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_separate_units</span><span class="p">(</span><span class="n">_graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; seperate the magnitude and the unit to save them in the gml file seperately</span>
+<span class="sd">            :param _graph a igraph object</span>
+<span class="sd">            :return:no return</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_graph</span><span class="p">,</span> <span class="n">PowerNetwork</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">vs</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bus</span><span class="o">.</span><span class="n">attribute_names</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+                    <span class="n">bus</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;_u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">bus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+                    <span class="n">bus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">bus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span>
+
+        <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">_graph</span><span class="o">.</span><span class="n">es</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">branch</span><span class="o">.</span><span class="n">attribute_names</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+                    <span class="c1"># print &quot;seperate Units for&quot;, branch[k]</span>
+                    <span class="n">branch</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;_u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+                    <span class="n">branch</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">branch</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_dict</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adding attributes to a vertex or link from a dictionary.</span>
+
+
+<span class="sd">        :param obj: VertexSeq or EdgeSeq</span>
+<span class="sd">            vertex or edge to add the attributes to</span>
+<span class="sd">        :param d: dict</span>
+<span class="sd">            attribute dictionary</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">obj</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_sort</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns ordered tuple.</span>
+
+<span class="sd">        :param t: tuple</span>
+<span class="sd">        :return :</span>
+
+<span class="sd">        &gt;&gt;&gt; print PowerNetwork._sort((2, 1))</span>
+<span class="sd">        (1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; print PowerNetwork._sort((&quot;b&quot;, &quot;a&quot;))</span>
+<span class="sd">        (&#39;a&#39;, &#39;b&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print PowerNetwork._sort((2 * 1j, 1))</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        TypeError: no ordering relation is defined for complex numbers</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+    <span class="c1">###############################################################################</span>
+    <span class="c1"># ##                       FUNCTION ATTIC                                  ## #</span>
+    <span class="c1">###############################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="PowerNetwork.vertex_name_index"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.vertex_name_index">[docs]</a>    <span class="k">def</span> <span class="nf">vertex_name_index</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param graph:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not supported yet.&quot;</span><span class="p">)</span></div>
+        <span class="c1"># return dict((v, k) for k, v in enumerate(graph.vs[&quot;name&quot;]))</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="PowerNetwork.graph_union_by_name"><a class="viewcode-back" href="../../powernetwork.html#power_network.powernetwork.PowerNetwork.graph_union_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">graph_union_by_name</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param g1:</span>
+<span class="sd">        :param g2:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not supported yet.&quot;</span><span class="p">)</span></div></div>
+        <span class="c1"># result_names = sorted(set(g1.vs[&quot;name&quot;]) + set(g2.vs[&quot;name&quot;]))</span>
+        <span class="c1"># result = Graph(len(result_names))</span>
+        <span class="c1"># result.vs[&quot;name&quot;] = &quot;names&quot;</span>
+        <span class="c1"># result_name_index = &quot;vertex_name_index(graph)&quot;&quot;</span>
+        <span class="c1"># edges = []</span>
+        <span class="c1"># for edge in g1:</span>
+        <span class="c1">#     src = result_name_index[g1.vs[edge.source][&quot;name&quot;]]</span>
+        <span class="c1">#     dest = result_name_index[g1.vs[edge.target][&quot;name&quot;]]</span>
+        <span class="c1">#     edges.append((src, dest))</span>
+        <span class="c1"># for edge in g2:</span>
+        <span class="c1">#     src = result_name_index[g2.vs[edge.source][&quot;name&quot;]]</span>
+        <span class="c1">#     dest = result_name_index[g2.vs[edge.target][&quot;name&quot;]]</span>
+        <span class="c1">#     edges.append((src, dest))</span>
+        <span class="c1"># result.add_edges(edges)</span>
+        <span class="c1"># return result</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1">###############################################################################</span>
+
+
+<span class="k">def</span> <span class="nf">test_PowerNetwork</span><span class="p">():</span>
+    <span class="c1"># g = PowerNetwork(&quot;test&quot;, edgelist, v_dict, e_dict)</span>
+    <span class="c1"># g = PowerNetwork(&quot;test&quot;, n=n, edgelist=edgelist, v_dict=v_dict, e_dict=e_dict)</span>
+
+    <span class="c1"># import igraph as ig</span>
+    <span class="c1"># f = ig.Graph.Erdos_Renyi(10, 0.5)</span>
+    <span class="c1"># h = ig.Graph.Erdos_Renyi(10, 0.5)</span>
+    <span class="c1">#</span>
+    <span class="c1"># f.vs[&quot;name&quot;] = range(10)</span>
+    <span class="c1"># h.vs[&quot;name&quot;] = range(5, 15)</span>
+    <span class="c1">#</span>
+    <span class="c1"># g = PowerNetwork.convert_igraph_object(f + h, &quot;ER&quot;)</span>
+    <span class="c1"># g = PowerNetwork(&quot;test&quot;, n=100)</span>
+    <span class="c1"># g.vertex_filter(&quot;lat&quot;, 0.5, &quot;_ge&quot;)</span>
+    <span class="c1">#g.visualise(&quot;plot&quot;)</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">PowerNetwork</span><span class="o">.</span><span class="n">SmallTestPowerGrid</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="n">g</span>
+
+    <span class="c1"># g.add_buses([10, 21], [&quot;generator&quot;, &quot;generator&quot;])</span>
+
+    <span class="c1"># g.add_branches([(0, 5), ])</span>
+
+
+    <span class="n">g</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;./&quot;</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">visualise</span><span class="p">(</span><span class="s2">&quot;plot&quot;</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">test_PowerUnicorn</span><span class="p">():</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">PowerUnicorn</span><span class="o">.</span><span class="n">setup_from_rpg</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">PowerUnicorn</span><span class="p">)</span>
+
+    <span class="n">b</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">betweenness</span><span class="p">()</span>
+    <span class="n">bb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">vertex_current_flow_betweenness</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">N</span><span class="p">)])</span>
+
+    <span class="nb">print</span> <span class="n">g</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">()</span>
+
+    <span class="kn">from</span> <span class="nn">awesomeplot.core</span> <span class="k">import</span> <span class="n">Plot</span>
+    <span class="n">canvas</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">)</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">add_scatterplot</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">bb</span><span class="p">)</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">add_network</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">adjacency</span><span class="p">,</span>
+                       <span class="n">styles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="n">g</span><span class="o">.</span><span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]]}</span>
+                       <span class="p">)</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test_PowerUnicorn</span><span class="p">()</span>
+    <span class="c1">#test_PowerNetwork()</span>
+    <span class="c1">#import doctest</span>
+    <span class="c1">#doctest.testmod()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Paul Schultz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

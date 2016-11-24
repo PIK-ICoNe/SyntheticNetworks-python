@@ -1,0 +1,469 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Power Grid Temporal Evolution Model &#8212; Random Power Grid Topology Models 2.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Random Power Grid Topology Models 2.1 documentation" href="index.html" />
+    <link rel="next" title="PowerNetwork" href="powernetwork.html" />
+    <link rel="prev" title="Welcome to Random Power Grid Topology Models’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pgtem.agents">
+<span id="power-grid-temporal-evolution-model"></span><h1>Power Grid Temporal Evolution Model<a class="headerlink" href="#module-pgtem.agents" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pgtem.agents.Coordinator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Coordinator</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Coordinator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Coordinator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinator class</p>
+<p>The class Coordinator contains methods for a &#8220;Coordinator&#8221;-agent
+(an instance) to do two things:
+a) propose possible grid extensions to connect new sites.
+b) negotiate between Grid Providers and the Regulator instance to find cheapest allowed extension.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Coordinator</span><span class="p">()</span>
+<span class="go">Coordinator class.</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pgtem.agents.Coordinator.negotiation">
+<code class="descname">negotiation</code><span class="sig-paren">(</span><em>possible_extensions</em>, <em>providers</em>, <em>regulator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Coordinator.negotiation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Coordinator.negotiation" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>possible_extensions</strong> &#8211; </li>
+<li><strong>providers</strong> &#8211; </li>
+<li><strong>regulator</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.Coordinator.proposition">
+<code class="descname">proposition</code><span class="sig-paren">(</span><em>node</em>, <em>grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Coordinator.proposition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Coordinator.proposition" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> &#8211; </li>
+<li><strong>grid</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Creator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Creator</code><span class="sig-paren">(</span><em>type</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creator class</p>
+<p>The class Creator contains methods for a &#8220;Creator&#8221;-agent
+(an instance) to suppose new sites for power generation and loads.</p>
+<p>This class can either be instantiated as a sink (load) or source (generator).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Creator</span><span class="o">.</span><span class="n">sink</span><span class="p">()</span>
+<span class="go">Creator class.</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pgtem.agents.Creator.new_node">
+<code class="descname">new_node</code><span class="sig-paren">(</span><em>BusID</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator.new_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator.new_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>New node at a random location. Node type is determined by class instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>BusID</strong> &#8211; int
+a unique node identifier</li>
+<li><strong>time</strong> &#8211; int/float
+a timestamp attribute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return subgraph:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">DataFrame object
+Table containing the following node attributes: BusID, lat, lon, time, type</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Creator</span><span class="o">.</span><span class="n">source</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">c</span><span class="o">.</span><span class="n">new_node</span><span class="p">(</span><span class="n">BusID</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+<span class="go">BusID       lat       lon  time    type</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pgtem.agents.Creator.sink">
+<em class="property">classmethod </em><code class="descname">sink</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator.sink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator.sink" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pgtem.agents.Creator.source">
+<em class="property">classmethod </em><code class="descname">source</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Creator.source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Creator.source" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.PowerGrid">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">PowerGrid</code><span class="sig-paren">(</span><em>n_final</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>PowerGrid class</p>
+<p>The class PowerGrid contains methods for a &#8220;PowerGrid&#8221;-agent
+(an instance) to suppose new sites for power generation and loads.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">PowerGrid</span><span class="p">(</span><span class="n">n_final</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">An instance of the PowerGrid class.</span>
+<span class="go">Final number of nodes: 10</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.add_edge">
+<code class="descname">add_edge</code><span class="sig-paren">(</span><em>source</em>, <em>target</em>, <em>type</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; </li>
+<li><strong>target</strong> &#8211; </li>
+<li><strong>type</strong> &#8211; </li>
+<li><strong>time</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>new_node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_node</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.convert_to_igraph">
+<code class="descname">convert_to_igraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.convert_to_igraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.convert_to_igraph" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.get_closest_node">
+<code class="descname">get_closest_node</code><span class="sig-paren">(</span><em>source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.get_closest_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.get_closest_node" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.import_from_rpg">
+<code class="descname">import_from_rpg</code><span class="sig-paren">(</span><em>g=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.import_from_rpg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.import_from_rpg" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>g</strong> &#8211; </li>
+<li><strong>kwargs</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>path</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.save" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> &#8211; </li>
+<li><strong>raw</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.PowerGrid.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>new_node=None</em>, <em>edgelist=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#PowerGrid.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.PowerGrid.update" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>new_node</strong> &#8211; </li>
+<li><strong>edgelist</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Provider">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Provider</code><span class="sig-paren">(</span><em>type='HV'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provider class</p>
+<p>The class Provider contains methods for a &#8220;Provider&#8221;-agent
+(an instance) to put price tags on the grid extensions proposed
+by the Coordinator instance.</p>
+<p>This class can be instantiated as an LV, MV or HV (incl. UHV) grid provider.</p>
+<p>The role of this agent might be extended in the future.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Provider</span><span class="o">.</span><span class="n">HV</span><span class="p">()</span>
+<span class="go">Provider class.</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="pgtem.agents.Provider.HV">
+<em class="property">classmethod </em><code class="descname">HV</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider.HV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider.HV" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pgtem.agents.Provider.LV">
+<em class="property">classmethod </em><code class="descname">LV</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider.LV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider.LV" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pgtem.agents.Provider.MV">
+<em class="property">classmethod </em><code class="descname">MV</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider.MV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider.MV" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pgtem.agents.Provider.get_costs">
+<code class="descname">get_costs</code><span class="sig-paren">(</span><em>grid_extensions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Provider.get_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Provider.get_costs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>grid_extensions</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pgtem.agents.Regulator">
+<em class="property">class </em><code class="descclassname">pgtem.agents.</code><code class="descname">Regulator</code><span class="sig-paren">(</span><em>type='source'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Regulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Regulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regulator class</p>
+<p>The class Regulator contains methods for a &#8220;Regulator&#8221;-agent
+(an instance) to evaluate wether grid extensions proposed by
+a Coordinator agent comply with grid codes (== are allowed).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">Regulator</span><span class="p">()</span>
+<span class="go">Regulator class.</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pgtem.agents.Regulator.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>grid_extensions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pgtem/agents.html#Regulator.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pgtem.agents.Regulator.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>grid_extensions</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Random Power Grid Topology Models&#8217;s documentation!</a></li>
+      <li>Next: <a href="powernetwork.html" title="next chapter">PowerNetwork</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pgtem.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Paul Schultz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.8</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/pgtem.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
