@@ -156,15 +156,26 @@ class RpgAlgorithm(object):
     def edgelist(self):
         return sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
 
-
+    def set_locationdata(self, locations):
+        assert len(locations) == self.n
+        self.sampling = "data"
+        self.locations = locations
+        self.counter = 0
 
     ###############################################################################
     # ##                       PRIVATE FUNCTIONS                               ## #
     ###############################################################################
 
-    def _get_coords(self):
+    def _get_coords(self, sampling=None, centre=None, boundaries=None):
+
+        if sampling is not None:
+            # override default sampling method
+            self.sampling = sampling
+
         if self.sampling == "uniform":
-            return self._uniformunitsquare()
+            return self._uniformunitsquare(centre, boundaries)
+        elif self.sampling == "data":
+            return self._locationdata()
         else:
             print "ERROR: Not implemented yet."
             exit(1)
@@ -182,12 +193,27 @@ class RpgAlgorithm(object):
             for u in xrange(v):
                 self.distance[(u, v)] = self._get_distance(u, v)
 
-    def _uniformunitsquare(self):
+    def _uniformunitsquare(self, centre=None, boundaries=None):
         """
         return point drawn uniformly at random
-        from unit square -> 2D coordinates
+
+        :param centre: centre distribution around this point
+        :param boundaries: array containing [width, height]
+        :return: coordinate tuple
         """
-        return np.random.uniform(size=2)
+
+        if centre is None:
+            centre = 0.
+        if boundaries is None:
+            boundaries = 2.
+
+        return (0.5 - np.random.uniform(size=2)) * np.array(boundaries) + np.array(centre)
+
+    def _locationdata(self):
+        pos = self.locations[self.counter]
+        self.counter += 1
+        return pos
+
 
     def _euclidean(self, u, v):
         """
@@ -446,6 +472,10 @@ def main():
 
     # set desired parameters and perform algorithm
     g.set_params(n=100, n0=10, r=1./3.)
+
+    # use predefined locations ...
+    #g.set_locationdata(np.random.random([g.n, 2]))
+
     g.initialise()
     g.grow()
 

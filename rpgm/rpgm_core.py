@@ -63,7 +63,7 @@ class RPG(RpgAlgorithm):
         :param info_file:
         :return:
         """
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = self.edgelist()
 
         G = Graph(self.added_nodes)
         G.add_edges(elist)
@@ -89,7 +89,7 @@ class RPG(RpgAlgorithm):
         """
         from scipy.linalg import eigvals
 
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = self.edgelist()
 
         G = Graph(self.added_nodes)
         G.add_edges(elist)
@@ -139,7 +139,7 @@ class RPG(RpgAlgorithm):
         :return:
         """
 
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = self.edgelist()
 
         filename = self.figdir + name + "_" + self.identifier + ".pdf"
 
