@@ -225,7 +225,7 @@ class RpgAlgorithm(object):
         if boundaries is None:
             boundaries = -1.
 
-        return 1. - np.random.uniform(size=2) * np.array(boundaries) + np.array(centre)
+        return (.5 - np.random.uniform(size=2)) * np.array(boundaries) + np.array(centre)
 
 
     def _euclidean(self, u, v):
