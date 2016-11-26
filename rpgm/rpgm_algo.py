@@ -36,11 +36,13 @@ class RpgAlgorithm(object):
         self.added_nodes = 0
         self.added_edges = 0
 
+        self.setup_locations()
+
         # CHANGE WITH CAUTION!
         self.distance_measure = "euclidean"
-        self.sampling = "uniform"
         self.low_memory = True
         self.debug = False
+
 
     def __str__(self):
         print "----------"
@@ -74,7 +76,7 @@ class RpgAlgorithm(object):
 
         # step I1: draw random locations from rho and add nodes
         #######################################################
-        self._add_random_locations(self.n0)
+        self._get_locations(self.n0)
         self.added_nodes += self.n0
 
         # step I2: construct minimum spanning tree
@@ -131,7 +133,7 @@ class RpgAlgorithm(object):
 
 
     def grow(self):
-        self._add_random_locations(self.n - self.n0)
+        self._get_locations(self.n - self.n0)
         self.adjacency._shape = (self.n, self.n)
 
         if self.r > 0:
@@ -156,11 +158,25 @@ class RpgAlgorithm(object):
     def edgelist(self):
         return sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
 
-    def set_locationdata(self, locations):
-        assert len(locations) == self.n
-        self.sampling = "data"
-        self.locations = locations
-        self.counter = 0
+    def setup_locations(self, sampling="uniform", locations = None, centre=None, boundaries=None):
+        """
+        setup function that returns locations, either randomly or from data
+        :param sampling:
+        :param locations:
+        :param centre:
+        :param boundaries:
+        :return:
+        """
+        if locations is not None:
+            assert len(locations) == self.n
+            self.locations = locations
+            self.counter = 0
+
+        self.sampling = sampling
+        self.centre = centre
+        self.boundaries = boundaries
+
+
 
     ###############################################################################
     # ##                       PRIVATE FUNCTIONS                               ## #
@@ -175,7 +191,9 @@ class RpgAlgorithm(object):
         if self.sampling == "uniform":
             return self._uniformunitsquare(centre, boundaries)
         elif self.sampling == "data":
-            return self._locationdata()
+            pos = self.locations[self.counter]
+            self.counter += 1
+            return pos
         else:
             print "ERROR: Not implemented yet."
             exit(1)
@@ -203,16 +221,11 @@ class RpgAlgorithm(object):
         """
 
         if centre is None:
-            centre = 0.
+            centre = -1.
         if boundaries is None:
-            boundaries = 2.
+            boundaries = -1.
 
-        return (0.5 - np.random.uniform(size=2)) * np.array(boundaries) + np.array(centre)
-
-    def _locationdata(self):
-        pos = self.locations[self.counter]
-        self.counter += 1
-        return pos
+        return 1. - np.random.uniform(size=2) * np.array(boundaries) + np.array(centre)
 
 
     def _euclidean(self, u, v):
@@ -422,13 +435,13 @@ class RpgAlgorithm(object):
         return np.array(G.shortest_paths())
 
 
-    def _add_random_locations(self, _m):
+    def _get_locations(self, _m):
         m = int(_m)
         if m < 1:
             print "ERROR: You have to add a positive integer number of nodes."
         else:
             for i in xrange(m):
-                pos = self._get_coords()
+                pos = self._get_coords(self.sampling, self.centre, self.boundaries)
                 self.lat.append(pos[0])
                 self.lon.append(pos[1])
             self._update_distance()
@@ -474,10 +487,11 @@ def main():
     g.set_params(n=100, n0=10, r=1./3.)
 
     # use predefined locations ...
-    #g.set_locationdata(np.random.random([g.n, 2]))
+    # g.setup_locations(sampling="data", locations=np.random.random([g.n, 2]))
 
     g.initialise()
     g.grow()
+
 
     print g
     # print g.adjacency
