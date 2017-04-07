@@ -45,11 +45,11 @@ class RpgAlgorithm(object):
 
 
     def __str__(self):
-        print "----------"
+        print("----------")
         #print self.graph.num_vertices(), "nodes and", self.graph.num_edges(), "edges"
         for attr in vars(self):
             if attr in ["identifier", "added_nodes", "n", "n0", "p", "q", "r", "s"]:
-                print attr, ":", str(getattr(self, attr))
+                print(attr, ":", str(getattr(self, attr)))
         return "----------"
 
     ###############################################################################
@@ -59,14 +59,14 @@ class RpgAlgorithm(object):
     def set_params(self, **kwargs):
         for key in kwargs:
             if not hasattr(self, key):
-                print "ERROR: There is no parameter called:", key
-                print "Possible choices: n,n0,p,q,r,s"
+                print("ERROR: There is no parameter called:", key)
+                print("Possible choices: n,n0,p,q,r,s")
                 continue
             else:
                 if self._validation(key, kwargs[key]):
                     setattr(self, key, kwargs[key])
                 else:
-                    print "ERROR: invalid parameter value for", key
+                    print("ERROR: invalid parameter value for", key)
 
     def initialise(self):
         assert self.n >= self.n0
@@ -86,7 +86,7 @@ class RpgAlgorithm(object):
         edge_mask = self.edgelist()
 
         if self.debug:
-            print "I2", edge_mask
+            print("I2", edge_mask)
 
 
         # step I3: add redundant links
@@ -94,7 +94,7 @@ class RpgAlgorithm(object):
         m = min(int(np.floor(self.n0 * (1 - self.s) * (self.p + self.q))), self.n0 * (self.n0 - 1) / 2 - (self.n0 - 1))
 
         candidates = {}
-        for (u, v) in self.distance.iterkeys():
+        for (u, v) in self.distance.keys():
             if not (u, v) in edge_mask:
                 candidates[(u, v)] = self.distance[(u, v)]
 
@@ -102,7 +102,7 @@ class RpgAlgorithm(object):
             dGmatrix = self._get_graph_distances()
             onesquare = np.ones([self.n0, self.n0])
 
-        for k in xrange(m):
+        for k in range(m):
             if self.r > 0:
                 #dGmatrix = self._get_graph_distances()
 
@@ -119,7 +119,7 @@ class RpgAlgorithm(object):
                                       dGmatrix[:,[b]] + onesquare + dGmatrix[[a],:])
 
             if self.debug:
-                print "I3", (a, b)
+                print("I3", (a, b))
 
         self.added_edges += m
 
@@ -141,7 +141,7 @@ class RpgAlgorithm(object):
             self.dGmatrix = np.concatenate([np.concatenate([self.dGmatrix, np.zeros((self.n - self.n0, self.n0))],axis=0),
                                             np.zeros((self.n, self.n - self.n0))],axis=1)
         # connect new vertices
-        for i in xrange(self.n0, self.n):
+        for i in range(self.n0, self.n):
             self.added_nodes += 1
             self._growth_step(i)
 
@@ -156,7 +156,7 @@ class RpgAlgorithm(object):
             delattr(self, "dGmatrix")
 
     def edgelist(self):
-        return sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        return sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
     def setup_locations(self, sampling="uniform", locations = None, centre=None, boundaries=None):
         """
@@ -195,20 +195,20 @@ class RpgAlgorithm(object):
             self.counter += 1
             return pos
         else:
-            print "ERROR: Not implemented yet."
+            print("ERROR: Not implemented yet.")
             exit(1)
 
     def _get_distance(self, u, v):
         if self.distance_measure == "euclidean":
             return self._euclidean(int(u), int(v))
         else:
-            print "ERROR: Not implemented yet."
+            print("ERROR: Not implemented yet.")
             exit(1)
 
     def _update_distance(self):
         N = len(self.lat)
-        for v in xrange(N):
-            for u in xrange(v):
+        for v in range(N):
+            for u in range(v):
                 self.distance[(u, v)] = self._get_distance(u, v)
 
     def _uniformunitsquare(self, centre=None, boundaries=None):
@@ -238,8 +238,8 @@ class RpgAlgorithm(object):
 
     def _growth_step(self, node):
         if self.debug:
-            print "---------"
-            print "adding node", node
+            print("---------")
+            print("adding node", node)
 
 
 
@@ -271,7 +271,7 @@ class RpgAlgorithm(object):
             self.added_edges += 1
 
             if self.debug:
-                print "G5", (int(a), int(b))
+                print("G5", (int(a), int(b)))
 
                 #TODO: make shure (a, node) and (b, node) are not selected again?
         else:
@@ -294,13 +294,13 @@ class RpgAlgorithm(object):
             self.added_edges += 1
 
             if self.debug:
-                print "G2", (node, target)
+                print("G2", (node, target))
 
             # step G3: add optimal redundant link to node
             #############################################
             if np.random.random() < self.p:
                 candidates = {}
-                for v in xrange(node - 1):
+                for v in range(node - 1):
                     if self.adjacency[v, node] == 0:
                         candidates[(v, node)] = self._get_distance(v, node) if self.low_memory else self.distance[(v, node)]
 
@@ -336,7 +336,7 @@ class RpgAlgorithm(object):
                     self.added_edges += 1
 
                     if self.debug:
-                        print "G3", (a, b)
+                        print("G3", (a, b))
 
 
             # step G4: add another optimal redundant link to random node
@@ -345,7 +345,7 @@ class RpgAlgorithm(object):
                 i2 = np.random.randint(node)
 
                 candidates = {}
-                for v in xrange(node):
+                for v in range(node):
                     if v == i2:
                         continue
                     if self.adjacency[v, i2] == 0:
@@ -384,7 +384,7 @@ class RpgAlgorithm(object):
                     self.added_edges += 1
 
                     if self.debug:
-                        print "G4", i2, (a, b)
+                        print("G4", i2, (a, b))
 
         if self.debug and self.r > 0:
             # check that update went well
@@ -438,9 +438,9 @@ class RpgAlgorithm(object):
     def _get_locations(self, _m):
         m = int(_m)
         if m < 1:
-            print "ERROR: You have to add a positive integer number of nodes."
+            print("ERROR: You have to add a positive integer number of nodes.")
         else:
-            for i in xrange(m):
+            for i in range(m):
                 pos = self._get_coords(self.sampling, self.centre, self.boundaries)
                 self.lat.append(pos[0])
                 self.lon.append(pos[1])
@@ -451,7 +451,7 @@ class RpgAlgorithm(object):
         # should be labeled from 0 to connected-1
         min = np.inf
         target = source
-        for node in xrange(connected):
+        for node in range(connected):
             if source == node:
                 # should actually not happen
                 continue
@@ -493,7 +493,7 @@ def main():
     g.grow()
 
 
-    print g
+    print(g)
     # print g.adjacency
 
     # create igraph object
