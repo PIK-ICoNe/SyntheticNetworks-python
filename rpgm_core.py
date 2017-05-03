@@ -120,7 +120,7 @@ class RPG(RpgAlgorithm):
         return STR
 
 
-    def plot_net(self, name="random_network", labels=False, crop=False):
+    def plot_net(self, name="random_network", labels=False):
 
         elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
 
@@ -165,7 +165,7 @@ class RPG(RpgAlgorithm):
         try:
             from pyunicorn.core import resistive_network as rn
         except:
-            print "ERROR: pyunicorn not availiable."
+            raise ImportWarning("pyunicorn not availiable")
             return np.zeros(self.added_nodes)
 
         def min_clust(W, N):
@@ -255,6 +255,8 @@ def main():
     print g
 
     print g.stats
+
+    g.save_graph()
 
     g.plot_net()
 
