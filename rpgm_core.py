@@ -46,7 +46,7 @@ class RPG(RpgAlgorithm):
 
         i = 0
         self.identifier = "random_net" + str(i)
-        while os.path.exists(self.netdir + self.identifier + ".gml"):
+        while os.path.exists(self.netdir + self.identifier + ".graphml"):
             i += 1
             self.identifier = "random_net" + str(i)
 
