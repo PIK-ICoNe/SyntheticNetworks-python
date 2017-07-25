@@ -19,8 +19,8 @@ __version__ = "v3.1"
 
 """
 layer parameters:
-    - N^{i,k} final number of nodes in connected component k belonging to layer i
-    - N_0^{i,k} number of seed nodes in connected component k belonging to layer i
+    - N^{i,L} final number of nodes in connected component L belonging to layer i
+    - N_0^{i,L} number of seed nodes in connected component L belonging to layer i
     - p^i, q^i, s^i and r^i model parameters adapted to each layer i
     - \sigma^i fraction of connector nodes to other layers (node type allocation)
     - \epsilon^i link length scale, sublayer i grows in boxes around connectors of width \epsilon^i
