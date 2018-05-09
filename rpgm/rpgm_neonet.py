@@ -98,7 +98,8 @@ class RpgAlgorithm(object):
         self.mst_edges = [None for l in range(self.L)]
         self.init_edges = [None for l in range(self.L)]
 
-        #TODO: find way to dynamically add nodes without index problems
+        #TODO: find way to dynamically add nodes without index problems instead of having a Graph of size totaln
+        # see also the comment in _update_graphs()
 
         self.levgraph = [Graph(self.totaln) for l in range(self.L)] # one graph per level, storing only that level's edges
         self.cumgraph = [Graph(self.totaln) for l in range(self.L)] # one graph per level, storing that and all higher levels' edges
