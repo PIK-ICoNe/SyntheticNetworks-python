@@ -1,0 +1,147 @@
+
+
+#Optimise the dispatch and capacities of the network in
+#opf-storage-data.
+
+# make the code as Python 3 compatible as possible
+from __future__ import print_function, division
+from __future__ import absolute_import
+
+import pypsa
+
+import datetime
+import pandas as pd
+
+import networkx as nx
+
+import numpy as np
+
+from itertools import chain
+
+import os
+
+
+from distutils.spawn import find_executable
+
+
+
+
+csv_folder_name = "opf-storage-data"
+network = pypsa.Network(csv_folder_name=csv_folder_name)
+print(network,network.co2_limit)
+
+#useful for debugging
+network.opf_keep_files = True
+
+network.determine_network_topology()
+
+print("Connected networks:\n",network.sub_networks)
+
+
+solver_search_order = ["glpk","gurobi"]
+
+solver_executable = {"glpk" : "glpsol", "gurobi" : "gurobi_cl"}
+
+solver_name = None
+
+for s in solver_search_order:
+    if find_executable(solver_executable[s]) is not None:
+        solver_name = s
+        break
+
+if solver_name is None:
+    print("No known solver found, quitting.")
+    sys.exit()
+
+print("Using solver:",solver_name)
+
+
+snapshots = network.snapshots
+
+network.lopf(snapshots=snapshots,solver_name=solver_name)
+
+print("Generator and storage capacities:\n")
+
+print(pd.concat((network.generators["p_nom"],network.storage_units["p_nom"])))
+
+print("\n\nBranch capacities:\n")
+
+print(network.branches().s_nom)
+
+for snapshot in snapshots:
+
+    print("\n"*2+"For time",snapshot,":\nBus injections:")
+
+    print(network.buses_t.p.loc[snapshot])
+
+    print("Total:",network.buses_t.p.loc[snapshot].sum())
+
+
+network.now = network.snapshots[0]
+
+
+for branch in network.branches().index:
+    print(branch,getattr(network,getattr(pypsa.components,branch[0]).list_name+"_t").p1.loc[network.now,branch[1]])
+
+
+print("Comparing bus injection to branch outgoing for %s:" % network.now)
+
+now = network.now
+
+for sub_network in network.sub_networks.obj:
+
+    print("\n\nConsidering sub network",sub_network,":")
+
+    for bus in sub_network.buses().index:
+
+        print("\n%s" % bus)
+
+        print("power injection (generators - loads + link feed-in):",network.buses_t.p.loc[network.now,bus])
+
+        generators = sum(network.generators_t.p.loc[now,network.generators.bus==bus])
+        loads = sum(network.loads_t.p.loc[now,network.loads.bus==bus])
+        storages = sum(network.storage_units_t.p.loc[now,network.storage_units.bus==bus])
+
+        print("generators - loads:",generators+ storages - loads)
+
+
+        p0 = 0.
+        p1 = 0.
+
+        for cls in pypsa.components.branch_types:
+            df = getattr(network,cls.list_name)
+            pnl = getattr(network,cls.list_name+"_t")
+
+            bs = (df.bus0 == bus)
+
+            if bs.any():
+                print(cls.__name__,"\n",pnl.p0.loc[now,bs])
+                p0 += pnl.p0.loc[now,bs].sum()
+
+            bs = (df.bus1 == bus)
+
+            if bs.any():
+                print(cls.__name__,"\n",pnl.p1.loc[now,bs])
+                p1 += pnl.p1.loc[now,bs].sum()
+
+
+        print("Branch injections:",p0+p1)
+
+        np.testing.assert_allclose(p0+p1,generators+ storages - loads)
+
+for su in network.storage_units.index:
+    suo = network.storage_units.loc[su]
+    if suo.p_nom > 1e-5:
+        print(su,suo.p_nom,"\n\nState of Charge:\n",network.storage_units_t.state_of_charge.loc[:,su],"\n\nDispatch:\n",network.storage_units_t.p.loc[:,su])
+
+
+for gen in network.generators.index:
+    print(gen,network.carriers.loc[network.generators.loc[gen,"carrier"],"co2_emissions"]*(1/network.generators.loc[gen,"efficiency"]))
+
+
+
+
+results_folder_name = os.path.join(csv_folder_name,"results")
+
+
+network.export_to_csv_folder(results_folder_name)
