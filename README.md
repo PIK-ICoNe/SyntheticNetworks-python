@@ -58,5 +58,14 @@ with mean degree approx. 2 (p = q = 0); Middle row: grids with redundant links m
 spatial distance (p + q = 1, r = 0); Bottom row: grids with redundant links maximizing a
 redundancy/cost trade-off (r = 1). Top right: Detail of real-world power grid in ENTSO-E
 region 1 (mainland Europe) for comparison.](net_exp.png)
-
+*(Adapted from [1]) Polar examples of random grid topologies with N=400 nodes
+and degree distributions for N=4000 nodes, generated with our model (s=0 in all plots).
+Links added in step I2, I3, G2, G3, or G4 are plotted in black, brown, blue, red,
+or orange, respectively. Left column: whole grid constructed with minimum spanning tree in
+initial phase (N 0 = N ); Middle and right columns: no initial phase, whole grid successively
+grown (N0 = 1, middle: p > 0, q = 0; right: p = 0, q > 0). Top row: tree-shaped grids
+with mean degree approx. 2 (p = q = 0); Middle row: grids with redundant links minimizing
+spatial distance (p + q = 1, r = 0); Bottom row: grids with redundant links maximizing a
+redundancy/cost trade-off (r = 1). Top right: Detail of real-world power grid in ENTSO-E
+region 1 (mainland Europe) for comparison.*
 
