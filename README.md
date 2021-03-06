@@ -1,3 +1,8 @@
+News
+====
+
+By resolving [#1](https://github.com/PIK-ICoN/SyntheticNetworks-python/issues/1) our algorithm is now available as part of the power system simulation tool [GridCal](https://github.com/SanPen/GridCal)!
+
 Welcome to SyntheticNetworks' documentation!
 ============================================
 
