@@ -45,7 +45,7 @@ class RpgAlgorithm(object):
         print("----------")
         for attr in vars(self):
             if attr in ["identifier", "added_nodes", "n", "n0", "p", "q", "r", "s"]:
-                print("{} : {}".format(attr, str(getattr(self, attr))))
+                print(("{} : {}".format(attr, str(getattr(self, attr)))))
         return "----------"
 
     ###############################################################################
@@ -55,14 +55,14 @@ class RpgAlgorithm(object):
     def set_params(self, **kwargs):
         for key in kwargs:
             if not hasattr(self, key):
-                print("ERROR: There is no parameter called: {}".format(key))
+                print(("ERROR: There is no parameter called: {}".format(key)))
                 print("Possible choices: n,n0,p,q,r,s")
                 continue
             else:
                 if self._validation(key, kwargs[key]):
                     setattr(self, key, kwargs[key])
                 else:
-                    print("ERROR: invalid parameter value for {}".format(key))
+                    print(("ERROR: invalid parameter value for {}".format(key)))
 
     def initialise(self):
         assert self.n >= self.n0
@@ -79,10 +79,10 @@ class RpgAlgorithm(object):
         ##########################################
         self._initial_mst()
 
-        edge_mask = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        edge_mask = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
         if self.debug:
-            print("I2", edge_mask)
+            print(("I2", edge_mask))
 
 
         # step I3: add redundant links
@@ -90,7 +90,7 @@ class RpgAlgorithm(object):
         m = min(int(np.floor(self.n0 * (1 - self.s) * (self.p + self.q))), self.n0 * (self.n0 - 1) / 2 - (self.n0 - 1))
 
         candidates = {}
-        for (u, v) in self.distance.iterkeys():
+        for (u, v) in self.distance.keys():
             if not (u, v) in edge_mask:
                 candidates[(u, v)] = self.distance[(u, v)]
 
@@ -102,7 +102,7 @@ class RpgAlgorithm(object):
             if self.r > 0:
                 #dGmatrix = self._get_graph_distances()
 
-                for (u, v) in candidates.iterkeys():
+                for (u, v) in candidates.keys():
                     candidates[(u, v)] = self.distance[(u, v)] / ( 1. + dGmatrix[u, v])**self.r
 
             a, b = min(candidates, key=candidates.get)
@@ -115,14 +115,14 @@ class RpgAlgorithm(object):
                                       dGmatrix[:,[b]] + onesquare + dGmatrix[[a],:])
 
             if self.debug:
-                print("I3", (a, b))
+                print(("I3", (a, b)))
 
         self.added_edges += m
 
-        assert self.added_edges == (len(self.adjacency.keys()) / 2)
+        assert self.added_edges == (len(list(self.adjacency.keys())) / 2)
 
         # label initial edges
-        self.init_edges = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        self.init_edges = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
         if self.debug and self.r > 0:
             assert ((dGmatrix - self._get_graph_distances())**2).sum() == 0 # check that update went well
@@ -194,7 +194,7 @@ class RpgAlgorithm(object):
     def _growth_step(self, node):
         if self.debug:
             print("---------")
-            print("adding node {}".format(node))
+            print(("adding node {}".format(node)))
 
 
 
@@ -203,7 +203,7 @@ class RpgAlgorithm(object):
         ########################################
         if (np.random.random() < self.s) and len(self.adjacency) > 1:
             # choose link at random:
-            elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+            elist = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
             ei = np.random.randint(len(elist))
             e = elist[ei]
@@ -226,7 +226,7 @@ class RpgAlgorithm(object):
             self.added_edges += 1
 
             if self.debug:
-                print("G5", (int(a), int(b)))
+                print(("G5", (int(a), int(b))))
 
             #TODO: make shure (a, node) and (b, node) are not selected again?
         else:
@@ -249,7 +249,7 @@ class RpgAlgorithm(object):
             self.added_edges += 1
 
             if self.debug:
-                print("G2", (node, target))
+                print(("G2", (node, target)))
 
             # step G3: add optimal redundant link to node
             #############################################
@@ -264,7 +264,7 @@ class RpgAlgorithm(object):
                     if self.r > 0:
                         #dGmatrix = self._get_graph_distances()
 
-                        for (u, v) in candidates.iterkeys():
+                        for (u, v) in candidates.keys():
                             candidates[(u, v)] /=  ( 1. + self.dGmatrix[u, v])**self.r
 
                     a, b = min(candidates, key=candidates.get)
@@ -291,7 +291,7 @@ class RpgAlgorithm(object):
                     self.added_edges += 1
 
                     if self.debug:
-                        print("G3", (a, b))
+                        print(("G3", (a, b)))
 
 
             # step G4: add another optimal redundant link to random node
@@ -312,7 +312,7 @@ class RpgAlgorithm(object):
                     if self.r > 0:
                         #dGmatrix = self._get_graph_distances()
 
-                        for (u, v) in candidates.iterkeys():
+                        for (u, v) in candidates.keys():
                             candidates[(u, v)] /= ( 1. + self.dGmatrix[u, v])**self.r
 
                     a, b = min(candidates, key=candidates.get)
@@ -339,7 +339,7 @@ class RpgAlgorithm(object):
                     self.added_edges += 1
 
                     if self.debug:
-                        print("G4", i2, (a, b))
+                        print(("G4", i2, (a, b)))
 
         if self.debug and self.r > 0:
             # check that update went well
@@ -384,7 +384,7 @@ class RpgAlgorithm(object):
 
 
     def _get_graph_distances(self):
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = sorted(set([self._s(key) for key in self.adjacency.keys()]))
         G = Graph(self.added_nodes)
         G.add_edges(elist)
         return np.array(G.shortest_paths())
@@ -448,7 +448,7 @@ def main():
 
     # create igraph object
     G = Graph(g.added_nodes)
-    G.add_edges(sorted(set([g._s(key) for key in g.adjacency.iterkeys()])))
+    G.add_edges(sorted(set([g._s(key) for key in g.adjacency.keys()])))
     G.vs["lat"] = g.lat
     G.vs["lon"] = g.lon
 

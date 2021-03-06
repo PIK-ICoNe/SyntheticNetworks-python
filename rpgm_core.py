@@ -57,7 +57,7 @@ class RPG(RpgAlgorithm):
     ###############################################################################
 
     def save_graph(self, info_file=True):
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
         G = Graph(self.added_nodes)
         G.add_edges(elist)
@@ -79,7 +79,7 @@ class RPG(RpgAlgorithm):
     def stats(self):
         from scipy.linalg import eigvals
 
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
         G = Graph(self.added_nodes)
         G.add_edges(elist)
@@ -122,7 +122,7 @@ class RPG(RpgAlgorithm):
 
     def plot_net(self, name="random_network", labels=False):
 
-        elist = sorted(set([self._s(key) for key in self.adjacency.iterkeys()]))
+        elist = sorted(set([self._s(key) for key in self.adjacency.keys()]))
 
         filename = self.figdir + name + "_" + self.identifier + ".pdf"
 
@@ -143,7 +143,7 @@ class RPG(RpgAlgorithm):
                 return "black"
 
         scale = 2
-        visual_style["layout"] = zip(self.lat, self.lon)
+        visual_style["layout"] = list(zip(self.lat, self.lon))
         visual_style["bbox"] = (x / y * 1024, 1024)
         visual_style["margin"] = 10 * scale
         visual_style["palette"] = palettes["heat"]
@@ -171,10 +171,10 @@ class RPG(RpgAlgorithm):
         def min_clust(W, N):
             ''' W is the admittance matrix'''
             C = np.zeros(N)
-            for i in xrange(N):
+            for i in range(N):
                 norm = 0
-                for j in xrange(N):
-                    for k in xrange(j):
+                for j in range(N):
+                    for k in range(j):
                         if j!=k:
                             norm += W[i,k]*W[i,j]
                             if W[i,j]*W[i,k]*W[j,k]>0:
@@ -185,7 +185,7 @@ class RPG(RpgAlgorithm):
             return C
 
         weights = self.adjacency
-        for key in weights.keys():
+        for key in list(weights.keys()):
             weights[key] = self.distance[self._s(key)]
 
         net = rn.ResNetwork(resistances=weights.todense())
@@ -198,11 +198,11 @@ class RPG(RpgAlgorithm):
         minC = min_clust(net.get_admittance(), net.N)
         #print 'minC'
         VCFB = np.zeros(net.N)
-        for a in xrange(net.N):
+        for a in range(net.N):
             VCFB[a] = 1.0*net.vertex_current_flow_betweenness(a) *((net.N*(net.N-1)) / 2) /net.N
         #print 'VCFB'
         ERCC = np.zeros(net.N)
-        for a in xrange(net.N):
+        for a in range(net.N):
             ERCC[a] = net.effective_resistance_closeness_centrality(a)
         #print 'ERCC'
         dead = np.zeros(net.N)
@@ -230,7 +230,7 @@ class RPG(RpgAlgorithm):
         t = 0.15
         poor_bs = np.zeros(net.N)
 
-        for i in xrange(net.N):
+        for i in range(net.N):
             if prob[i]>t:
                 poor_bs[i]=1
         return prob
@@ -252,9 +252,9 @@ def main():
     g.initialise()
     g.grow()
 
-    print g
+    print(g)
 
-    print g.stats
+    print(g.stats)
 
     g.save_graph()
 
